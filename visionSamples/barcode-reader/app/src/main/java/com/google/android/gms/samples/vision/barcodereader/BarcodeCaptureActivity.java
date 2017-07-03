@@ -28,6 +28,7 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -80,6 +81,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private ScaleGestureDetector scaleGestureDetector;
     private GestureDetector gestureDetector;
 
+    public static BarcodeGraphic mGraphic = null;
+
     /**
      * Initializes the UI and creates the detector pipeline.
      */
@@ -121,10 +124,11 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             }
         }*/
 
-
+        /*
         Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
                 Snackbar.LENGTH_LONG)
                 .show();
+        */
     }
 
     /**
@@ -169,12 +173,12 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         return b || c || super.onTouchEvent(e);
     }
 
-    /*void foundBarcode(Barcode bc) {
+    public void foundBarcode(Barcode bc) {
         Intent data = new Intent();
         data.putExtra(BarcodeObject, bc);
         setResult(CommonStatusCodes.SUCCESS, data);
         finish();
-    }*/
+    }
 
     /**
      * Creates and starts the camera.  Note that this uses a higher resolution in comparison
@@ -192,7 +196,10 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         // is set to receive the barcode detection results, track the barcodes, and maintain
         // graphics for each barcode on screen.  The factory is used by the multi-processor to
         // create a separate tracker instance for each barcode.
-        BarcodeDetector barcodeDetector = new BarcodeDetector.Builder(context).build();
+        BarcodeDetector barcodeDetector = new BarcodeDetector
+                .Builder(context)
+                .setBarcodeFormats(Barcode.QR_CODE)
+                .build();
         //BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay);
         /*barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
             @Override
@@ -210,6 +217,26 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay);
         barcodeDetector.setProcessor(
                 new MultiProcessor.Builder<>(barcodeFactory).build());
+
+        /*
+         ** Every 100 milliseconds checks if BarcodeTrackerFactory has returned a BarcodeGraphic
+         ** global static variable. If it has, then MainActivity receives the BarcodeGraphic
+         ** and resets the global static variable
+        */
+
+        final Handler h = new Handler();
+        final int delay = 100; //milliseconds
+
+        h.postDelayed(new Runnable(){
+            public void run(){
+                if(mGraphic != null) {
+                    BarcodeGraphic bg = mGraphic;
+                    foundBarcode(bg.getBarcode());
+                }
+                h.postDelayed(this, delay);
+            }
+        }, delay);
+
 
         if (!barcodeDetector.isOperational()) {
             // Note: The first time that an app using the barcode or face API is installed on a
