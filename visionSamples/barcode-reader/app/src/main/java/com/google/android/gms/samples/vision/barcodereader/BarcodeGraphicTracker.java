@@ -51,7 +51,7 @@ class BarcodeGraphicTracker extends Tracker<Barcode> {
         mOverlay.add(mGraphic);
         mGraphic.updateItem(item);
     }
-
+    
     /**
      * Hide the graphic when the corresponding object was not detected.  This can happen for
      * intermediate frames temporarily, for example if the object was momentarily blocked from

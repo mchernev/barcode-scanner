@@ -38,4 +38,3 @@ class BarcodeTrackerFactory implements MultiProcessor.Factory<Barcode> {
     }
 
 }
-

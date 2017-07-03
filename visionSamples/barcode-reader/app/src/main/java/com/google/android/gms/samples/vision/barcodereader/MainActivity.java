@@ -26,6 +26,7 @@ import android.widget.TextView;
 
 import com.google.android.gms.common.api.CommonStatusCodes;
 import com.google.android.gms.vision.barcode.Barcode;
+import com.google.android.gms.vision.text.Text;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
@@ -52,6 +53,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
         useFlash = (CompoundButton) findViewById(R.id.use_flash);
+
+        useFlash.setChecked(false);
+        autoFocus.setChecked(true);
+        autoFocus.setVisibility(View.INVISIBLE);
+        useFlash.setVisibility(View.INVISIBLE);
+
+        Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+        intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
+        intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
+
+        startActivityForResult(intent, RC_BARCODE_CAPTURE);
 
         findViewById(R.id.read_barcode).setOnClickListener(this);
     }
@@ -105,6 +117,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     statusMessage.setText(R.string.barcode_success);
                     barcodeValue.setText(barcode.displayValue);
                     Log.d(TAG, "Barcode read: " + barcode.displayValue);
+                    //TextView result = (TextView) findViewById(R.id.bar_res);
+                    //result.setText(barcode.displayValue);
+                    autoFocus.setVisibility(View.INVISIBLE);
+                    useFlash.setVisibility(View.INVISIBLE);
                 } else {
                     statusMessage.setText(R.string.barcode_failure);
                     Log.d(TAG, "No barcode captured, intent data is null");

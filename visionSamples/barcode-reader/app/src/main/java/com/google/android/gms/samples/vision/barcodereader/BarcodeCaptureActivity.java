@@ -46,6 +46,7 @@ import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSourc
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSourcePreview;
 
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.GraphicOverlay;
+import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -106,6 +107,21 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
+        /*if(!mGraphicOverlay.getGraphics().isEmpty()) {
+            Barcode barcode = null;
+            for (BarcodeGraphic graphic : mGraphicOverlay.getGraphics()) {
+                barcode = graphic.getBarcode();
+                break;
+            }
+            if (barcode != null) {
+                Intent data = new Intent();
+                data.putExtra(BarcodeObject, barcode);
+                setResult(CommonStatusCodes.SUCCESS, data);
+                finish();
+            }
+        }*/
+
+
         Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
                 Snackbar.LENGTH_LONG)
                 .show();
@@ -153,6 +169,13 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         return b || c || super.onTouchEvent(e);
     }
 
+    /*void foundBarcode(Barcode bc) {
+        Intent data = new Intent();
+        data.putExtra(BarcodeObject, bc);
+        setResult(CommonStatusCodes.SUCCESS, data);
+        finish();
+    }*/
+
     /**
      * Creates and starts the camera.  Note that this uses a higher resolution in comparison
      * to other detection examples to enable the barcode detector to detect small barcodes
@@ -170,6 +193,20 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         // graphics for each barcode on screen.  The factory is used by the multi-processor to
         // create a separate tracker instance for each barcode.
         BarcodeDetector barcodeDetector = new BarcodeDetector.Builder(context).build();
+        //BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay);
+        /*barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
+            @Override
+            public void release() {
+
+            }
+
+            @Override
+            public void receiveDetections(Detector.Detections<Barcode> detections) {
+                foundBarcode(detections.getDetectedItems().get(0));
+            }
+        });
+        //new MultiProcessor.Builder<>(barcodeFactory).build());
+        */
         BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay);
         barcodeDetector.setProcessor(
                 new MultiProcessor.Builder<>(barcodeFactory).build());
