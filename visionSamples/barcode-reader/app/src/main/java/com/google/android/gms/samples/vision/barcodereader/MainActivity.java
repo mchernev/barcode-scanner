@@ -116,10 +116,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if (data != null) {
                     Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
                     statusMessage.setText(R.string.barcode_success);
-                    barcodeValue.setText(barcode.displayValue);
+                    //barcodeValue.setText(barcode.displayValue);
                     Log.d(TAG, "Barcode read: " + barcode.displayValue);
                     //TextView result = (TextView) findViewById(R.id.bar_res);
                     //result.setText(barcode.displayValue);
+                    Intent i = new Intent(MainActivity.this, ModifyInformation.class);
+                    i.putExtra("QRCode", barcode.displayValue);
+                    startActivity(i);
                     autoFocus.setVisibility(View.INVISIBLE);
                     useFlash.setVisibility(View.INVISIBLE);
                 } else {

@@ -220,8 +220,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
         /*
          ** Every 100 milliseconds checks if BarcodeTrackerFactory has returned a BarcodeGraphic
-         ** global static variable. If it has, then MainActivity receives the BarcodeGraphic
-         ** and resets the global static variable
+         ** through a global static variable. If it has, then MainActivity receives the
+         ** BarcodeGraphic and resets the global static variable
         */
 
         final Handler h = new Handler();
