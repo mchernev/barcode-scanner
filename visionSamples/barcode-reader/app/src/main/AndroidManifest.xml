@@ -34,7 +34,8 @@
         <activity
             android:name=".BarcodeCaptureActivity"
             android:label="Read Barcode" />
-        <activity android:name=".ModifyInformation"></activity>
+        <activity android:name=".ModifyInformation" />
+        <activity android:name=".ListCustomers"></activity>
     </application>
 
 </manifest>

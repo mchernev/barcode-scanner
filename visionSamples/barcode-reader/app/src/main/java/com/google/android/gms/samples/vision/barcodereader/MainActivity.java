@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private TextView barcodeValue;
 
     private static final int RC_BARCODE_CAPTURE = 9001;
+    private static final int MODIFY_INFO = 9002;
     private static final String TAG = "BarcodeMain";
 
     @Override
@@ -122,7 +123,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     //result.setText(barcode.displayValue);
                     Intent i = new Intent(MainActivity.this, ModifyInformation.class);
                     i.putExtra("QRCode", barcode.displayValue);
-                    startActivity(i);
+                    startActivityForResult(i, MODIFY_INFO);
                     autoFocus.setVisibility(View.INVISIBLE);
                     useFlash.setVisibility(View.INVISIBLE);
                 } else {
@@ -134,6 +135,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         CommonStatusCodes.getStatusCodeString(resultCode)));
             }
         }
+
+        if(requestCode == MODIFY_INFO){
+            if(resultCode == CommonStatusCodes.ERROR){
+                if(data != null){
+                    String message = getResources().getString(R.string.invalid_json) + "\n\n" + data.getStringExtra("Display Exception");
+                    statusMessage.setText(message);
+                    Log.d(TAG, "Error after barcode was read: " + data.getStringExtra("Display Exception"));
+                }
+            }
+        }
+
         else {
             super.onActivityResult(requestCode, resultCode, data);
         }
