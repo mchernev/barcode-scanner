@@ -7,15 +7,25 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
+import android.support.v4.app.ShareCompat;
+import android.support.v4.content.FileProvider;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Arrays;
 
 public class MainActivity extends Activity {
 
@@ -30,15 +40,103 @@ public class MainActivity extends Activity {
         final EditText emailBody = (EditText) findViewById(R.id.emailBody);
         final Button sendEmail = (Button) findViewById(R.id.sendEmail);
 
-        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-        StrictMode.setVmPolicy(builder.build());
+        // StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        // StrictMode.setVmPolicy(builder.build());
 
+        // File f = getExternalFilePath("myfile");
+//        if(!f.exists()) {
+//            try {
+//                f.createNewFile();
+//            } catch (IOException e) {
+//                Log.e("TAG", "A", e);
+//            }
+//        }
+//        try {
+//            FileOutputStream ff = new FileOutputStream(f);
+//            ff.write("Hello nurse!".getBytes());
+//            ff.close();
+//        } catch (IOException e) {
+//            Log.e("TAG", "wow", e);
+//        }
+
+        // We assume the file we want to load is in the documents/ subdirectory
+        // of the internal storage
+        File documentsPath = new File(getFilesDir(), "export");
+        if (!documentsPath.mkdirs()) {
+            Log.e("TAG", "Could not make dirs");
+            return;
+        }
+        File file = new File(documentsPath, "myfile");
+
+        try {
+            file.createNewFile();
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write("bla\n".getBytes());
+            fos.close();
+        } catch (IOException e) {
+            Log.e("TAG", "wtf", e);
+            return;
+        }
+
+        // This can also in one line of course:
+        // File file = new File(Context.getFilesDir(), "documents/sample.pdf");
+
+        Uri uri = FileProvider.getUriForFile(this, "com.momchil.emailsender.fileprovider", file);
+
+
+
+        Intent intent = ShareCompat.IntentBuilder.from(this)
+                .setType("text/csv")
+                .setStream(uri)
+                .setChooserTitle("Choose bar")
+                .createChooserIntent()
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(intent);
+
+//        String filename = "myfile";
+//        String string = "Hello world!";
+//        FileOutputStream outputStream;
+//
+//        try {
+//            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+//            outputStream.write(string.getBytes());
+//            outputStream.close();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+
+//        byte[] b = new byte[256];
+//        int bytesRead;
+//        File f = new File(this.getFilesDir(), "myfile");
+//        try {
+//            FileInputStream fis = new FileInputStream(f);
+//            bytesRead = fis.read(b);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//
+//        StringBuilder sb = new StringBuilder();
+//        for (int i = 0; i < bytesRead; ++i) {
+//            sb.append((int) b[i]);
+//            sb.append(' ');
+//        }
+//
+//        Log.i("TAG", sb.toString());
+//
+//        String ss = new String(b, 0, bytesRead, StandardCharsets.US_ASCII);
+//        //String s = new String(b, bytesRead);
+//        emailBody.setText(ss);
+
+        /*
         String fileName = "myfile.txt";
         String content = "hello world";
 
         FileOutputStream outputStream = null;
         try {
-            outputStream = openFileOutput(fileName, Context.MODE_WORLD_READABLE);
+            outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
             outputStream.write(content.getBytes());
             outputStream.close();
         } catch (Exception e) {
@@ -48,7 +146,7 @@ public class MainActivity extends Activity {
         emailBody.setText(file.toString());
         final Uri uri = Uri.fromFile(file);
         emailBody.setText((uri.toString()));
-
+*/
         /*File file = null;
         if(isExternalStorageWritable()) {
             file = getStorageDir(this, "myfile");
@@ -90,6 +188,9 @@ public class MainActivity extends Activity {
         final Uri uri = Uri.fromFile(file);
         */
 
+        // send(emailBody.getText().toString(), Uri.fromFile(f));
+
+        /*
         sendEmail.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -98,6 +199,7 @@ public class MainActivity extends Activity {
                 //emailBody.setText(uri.toString());
             }
         });
+        */
 
     }
 
@@ -108,6 +210,15 @@ public class MainActivity extends Activity {
             return true;
         }
         return false;
+    }
+
+    public File getExternalFilePath(String filename) {
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS), filename);
+        if (!file.getParentFile().mkdirs()) {
+            Log.e("TAG", "Directory not created");
+        }
+        return file;
     }
 
     public File getStorageDir(Context context, String dir) {
