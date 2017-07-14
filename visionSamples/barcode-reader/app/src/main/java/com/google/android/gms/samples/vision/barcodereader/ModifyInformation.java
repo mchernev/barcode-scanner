@@ -4,6 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +22,7 @@ import com.google.gson.internal.ObjectConstructor;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,7 +30,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.TimeZone;
 
-public class ModifyInformation extends Activity {
+public class ModifyInformation extends AppCompatActivity {
 
     private DBManager dbManager;
 
@@ -32,6 +38,16 @@ public class ModifyInformation extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_modify_information);
+
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         final TextView displayName = (TextView) findViewById(R.id.displayName);
         TextView displayCompany = (TextView) findViewById(R.id.displayCompany);
@@ -53,6 +69,7 @@ public class ModifyInformation extends Activity {
         Gson gson = new Gson();
 
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
+
         try {
             Map<String, Object> myMap = gson.fromJson(json, type);
             MapWrapper mw = new MapWrapper(myMap);
@@ -73,7 +90,6 @@ public class ModifyInformation extends Activity {
             setResult(CommonStatusCodes.ERROR, data);
             finish();
         }
-
 
         Date date = new Date();
         DateFormat df = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
@@ -103,6 +119,37 @@ public class ModifyInformation extends Activity {
                 startActivity(i);
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_scan: {
+                Intent i = new Intent(this, MainActivity.class);
+                startActivity(i);
+                break;
+            }
+            case R.id.action_list: {
+                // do something
+                break;
+            }
+            case R.id.action_export: {
+                // do something
+                break;
+            }
+            case R.id.action_info: {
+                Intent i = new Intent(this, ListCustomers.class);
+                startActivity(i);
+                break;
+            }
+        }
+        return false;
     }
 
     private String getMetaJSON(){

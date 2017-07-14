@@ -2,6 +2,10 @@ package com.google.android.gms.samples.vision.barcodereader;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.content.Intent;
@@ -12,7 +16,7 @@ import android.widget.TextView;
 
 
 
-public class ListCustomers extends Activity {
+public class ListCustomers extends AppCompatActivity {
 
     private DBManager dbManager;
 
@@ -29,6 +33,16 @@ public class ListCustomers extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_emp_list);
+
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         dbManager = new DBManager(this);
         dbManager.open();
@@ -63,4 +77,37 @@ public class ListCustomers extends Activity {
             }
         });
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_scan: {
+                Intent i = new Intent(this, MainActivity.class);
+                startActivity(i);
+                break;
+            }
+            case R.id.action_list: {
+                // do something
+                break;
+            }
+            case R.id.action_export: {
+                // do something
+                break;
+            }
+            case R.id.action_info: {
+                //Intent i = new Intent(this, ListCustomers.class);
+                //startActivity(i);
+                //Already here
+                break;
+            }
+        }
+        return false;
+    }
+
 }

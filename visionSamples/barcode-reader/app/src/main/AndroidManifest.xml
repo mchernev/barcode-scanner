@@ -14,7 +14,8 @@
         android:icon="@drawable/icon"
         android:label="MultiTrackerApp"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat">
+        android:theme="@style/Theme.AppCompat.NoActionBar">
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -33,9 +34,12 @@
         </activity>
         <activity
             android:name=".BarcodeCaptureActivity"
-            android:label="Read Barcode" />
+            android:label="Read Barcode"
+            android:screenOrientation="portrait"/>
         <activity android:name=".ModifyInformation" />
-        <activity android:name=".ListCustomers"></activity>
+        <activity
+            android:name=".ListCustomers"
+            android:label="Scanned People"/>
     </application>
 
 </manifest>

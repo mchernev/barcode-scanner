@@ -33,8 +33,11 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
@@ -90,6 +93,16 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         setContentView(R.layout.barcode_capture);
+
+        Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.graphicOverlay);
@@ -361,6 +374,38 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                 .setMessage(R.string.no_camera_permission)
                 .setPositiveButton(R.string.ok, listener)
                 .show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_scan: {
+                //Intent i = new Intent(this, MainActivity.class);
+                //startActivity(i);
+                //Already here
+                break;
+            }
+            case R.id.action_list: {
+                // do something
+                break;
+            }
+            case R.id.action_export: {
+                // do something
+                break;
+            }
+            case R.id.action_info: {
+                Intent i = new Intent(this, ListCustomers.class);
+                startActivity(i);
+                break;
+            }
+        }
+        return false;
     }
 
     /**

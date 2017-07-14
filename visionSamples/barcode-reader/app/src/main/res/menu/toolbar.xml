@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_scan"
+        android:icon="@drawable/icon"
+        android:title="Scan"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_list"
+        android:icon="@drawable/icon"
+        android:title="List"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_export"
+        android:icon="@drawable/icon"
+        android:title="Export"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/action_info"
+        android:icon="@drawable/icon"
+        android:title="Information"
+        app:showAsAction="never"/>
+
+</menu>
