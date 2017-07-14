@@ -61,11 +61,193 @@ public class MainActivity extends Activity {
 
         // We assume the file we want to load is in the documents/ subdirectory
         // of the internal storage
-        File documentsPath = new File(getFilesDir(), "export");
-        if (!documentsPath.mkdirs()) {
-            Log.e("TAG", "Could not make dirs");
-            return;
+//        File documentsPath = new File(getFilesDir(), "export");
+//        File file = new File(documentsPath, "myfile");
+//
+//        try {
+//            file.createNewFile();
+//            FileOutputStream fos = new FileOutputStream(file);
+//            fos.write("bla\n".getBytes());
+//            fos.close();
+//        } catch (IOException e) {
+//            Log.e("TAG", "wtf", e);
+//            return;
+//        }
+//
+//        // This can also in one line of course:
+//        // File file = new File(Context.getFilesDir(), "documents/sample.pdf");
+//
+//        Uri uri = FileProvider.getUriForFile(this, "com.momchil.emailsender.fileprovider", file);
+//
+//        Intent intent = ShareCompat.IntentBuilder.from(this)
+//                .setType("text/csv")
+//                .setStream(uri)
+//                .setChooserTitle("Choose bar")
+//                .createChooserIntent()
+//                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//
+//        startActivity(intent);
+
+
+        //TODO: Come here
+        //sendFileWithExternal("", "", "Some text");
+        //sendFileWithProvider();
+
+
+
+//        File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "exp");
+//        if (!path.mkdirs()) {
+//            Log.e("TAG", "Could not make dirs");
+//           // return;
+//        }
+//        File f = new File(path, "testfile");
+//
+//        try {
+//            f.createNewFile();
+//            FileOutputStream foss = new FileOutputStream(f);
+//            foss.write("blabla\n".getBytes());
+//            foss.close();
+//        } catch (IOException e) {
+//            Log.e("TAG", "wtf", e);
+//            return;
+//        }
+//        //Uri u = FileProvider.getUriForFile(this, "com.momchil.emailsender.fileprovider", f);
+//        Uri u = Uri.fromFile(f);
+//        send("sda", u);
+
+
+//        byte[] b = new byte[256];
+//        int bytesRead;
+//        File f = new File(this.getFilesDir(), "myfile");
+//        try {
+//            FileInputStream fis = new FileInputStream(f);
+//            bytesRead = fis.read(b);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return;
+//        }
+//
+//        StringBuilder sb = new StringBuilder();
+//        for (int i = 0; i < bytesRead; ++i) {
+//            sb.append((int) b[i]);
+//            sb.append(' ');
+//        }
+//
+//        Log.i("TAG", sb.toString());
+//
+//        String ss = new String(b, 0, bytesRead, StandardCharsets.US_ASCII);
+//        //String s = new String(b, bytesRead);
+//        emailBody.setText(ss);
+
+
+        //String filename="contacts_sid.vcf";
+
+        //File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
+
+        //Uri path = Uri.fromFile(filelocation);
+
+        //performFileSearch();
+
+
+//        sendEmail.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                //send(emailBody.getText().toString(), path);
+//                send(emailBody.getText().toString(), uri);
+//                //emailBody.setText(uri.toString());
+//            }
+//        });
+
+
+    }
+
+    /* Checks if external storage is available for read and write */
+    public boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
         }
+        return false;
+    }
+
+//    public File getExternalFilePath(String filename) {
+//        File file = new File(Environment.getExternalStoragePublicDirectory(
+//                Environment.DIRECTORY_DOWNLOADS), filename);
+//        if (!file.getParentFile().mkdirs()) {
+//            Log.e("TAG", "Directory not created");
+//        }
+//        return file;
+//    }
+
+//    public File getStorageDir(Context context, String dir) {
+//        // Get the directory for the app's private pictures directory.
+//        File file = new File(context.getExternalFilesDir(
+//                Environment.DIRECTORY_DOCUMENTS), dir);
+////        if (!file.mkdirs()) {
+////            //Log.e(LOG_TAG, "Directory not created");
+////        }
+//        return file;
+//    }
+
+
+    private void send(String body, Uri path){
+        Intent i = new Intent(Intent.ACTION_SEND);
+        i.setType("message/rfc822");
+        i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"mchernev95@gmail.com"});
+        i.putExtra(Intent.EXTRA_SUBJECT, "Android App Test");
+        i.putExtra(Intent.EXTRA_TEXT   , body);
+        i.putExtra(Intent.EXTRA_STREAM, path);
+        try {
+            startActivity(Intent.createChooser(i, "Send mail..."));
+        } catch (android.content.ActivityNotFoundException ex) {
+            Toast.makeText(MainActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+//    public void performFileSearch() {
+//
+//        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
+//        // browser.
+//        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//
+//        // Filter to only show results that can be "opened", such as a
+//        // file (as opposed to a list of contacts or timezones)
+//        intent.addCategory(Intent.CATEGORY_OPENABLE);
+//
+//        // Filter to show only images, using the image MIME data type.
+//        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
+//        // To search for all documents available via installed storage providers,
+//        // it would be "*/*".
+//        intent.setType("*/*");
+//
+//        startActivityForResult(intent, READ_REQUEST_CODE);
+//    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData) {
+
+        // The ACTION_OPEN_DOCUMENT intent was sent with the request code
+        // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
+        // response to some other intent, and the code below shouldn't run at all.
+
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.
+            // Pull that URI using resultData.getData().
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                EditText txt = (EditText) findViewById(R.id.emailBody);
+                txt.setText(uri.toString());
+                //send("Some text", uri);
+            }
+        }
+    }
+
+    public void sendFileWithProvider(){
+        File documentsPath = new File(getFilesDir(), "export");
         File file = new File(documentsPath, "myfile");
 
         try {
@@ -93,200 +275,31 @@ public class MainActivity extends Activity {
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         startActivity(intent);
+    }
 
-//        String filename = "myfile";
-//        String string = "Hello world!";
-//        FileOutputStream outputStream;
-//
-//        try {
-//            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-//            outputStream.write(string.getBytes());
-//            outputStream.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+    public void sendFileWithExternal(String receiver, String subject, String body) {
+        if (isExternalStorageWritable()) {
+            File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "exp");
+            File f = new File(path, "testfile");
 
-
-//        byte[] b = new byte[256];
-//        int bytesRead;
-//        File f = new File(this.getFilesDir(), "myfile");
-//        try {
-//            FileInputStream fis = new FileInputStream(f);
-//            bytesRead = fis.read(b);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return;
-//        }
-//
-//        StringBuilder sb = new StringBuilder();
-//        for (int i = 0; i < bytesRead; ++i) {
-//            sb.append((int) b[i]);
-//            sb.append(' ');
-//        }
-//
-//        Log.i("TAG", sb.toString());
-//
-//        String ss = new String(b, 0, bytesRead, StandardCharsets.US_ASCII);
-//        //String s = new String(b, bytesRead);
-//        emailBody.setText(ss);
-
-        /*
-        String fileName = "myfile.txt";
-        String content = "hello world";
-
-        FileOutputStream outputStream = null;
-        try {
-            outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
-            outputStream.write(content.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), fileName);
-        emailBody.setText(file.toString());
-        final Uri uri = Uri.fromFile(file);
-        emailBody.setText((uri.toString()));
-*/
-        /*File file = null;
-        if(isExternalStorageWritable()) {
-            file = getStorageDir(this, "myfile");
-
-        }
-        String string = "hello world";
-        final Uri uri = Uri.fromFile(file);
-        try {
-            FileOutputStream outputStream = new FileOutputStream(file);
-            outputStream.write(string.getBytes());
-            outputStream.close();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }*/
-
-        //String filename="contacts_sid.vcf";
-
-        //File filelocation = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), filename);
-
-        //Uri path = Uri.fromFile(filelocation);
-
-        //performFileSearch();
-
-        /*
-        String filename = "myfile.txt";
-        File file = new File(getFilesDir(), filename);
-        file.setReadable(true, false);
-        String string = "Hello world!";
-        FileOutputStream outputStream;
-        try {
-            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(string.getBytes());
-            outputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        final Uri uri = Uri.fromFile(file);
-        */
-
-        // send(emailBody.getText().toString(), Uri.fromFile(f));
-
-        /*
-        sendEmail.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //send(emailBody.getText().toString(), path);
-                send(emailBody.getText().toString(), uri);
-                //emailBody.setText(uri.toString());
+            try {
+                f.createNewFile();
+                FileOutputStream foss = new FileOutputStream(f);
+                foss.write("blabla\n".getBytes());
+                foss.close();
+            } catch (IOException e) {
+                Log.e("TAG", "wtf", e);
+                return;
             }
-        });
-        */
-
-    }
-
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
+            //Uri u = FileProvider.getUriForFile(this, "com.momchil.emailsender.fileprovider", f);
+            Uri u = Uri.fromFile(f);
+            send(body, u);
         }
-        return false;
-    }
-
-    public File getExternalFilePath(String filename) {
-        File file = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOWNLOADS), filename);
-        if (!file.getParentFile().mkdirs()) {
-            Log.e("TAG", "Directory not created");
-        }
-        return file;
-    }
-
-    public File getStorageDir(Context context, String dir) {
-        // Get the directory for the app's private pictures directory.
-        File file = new File(context.getExternalFilesDir(
-                Environment.DIRECTORY_DOCUMENTS), dir);
-//        if (!file.mkdirs()) {
-//            //Log.e(LOG_TAG, "Directory not created");
-//        }
-        return file;
-    }
-
-
-    private void send(String body, Uri path){
-        Intent i = new Intent(Intent.ACTION_SEND);
-        i.setType("message/rfc822");
-        i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"mchernev95@gmail.com"});
-        i.putExtra(Intent.EXTRA_SUBJECT, "Android App Test");
-        i.putExtra(Intent.EXTRA_TEXT   , body);
-        i.putExtra(Intent.EXTRA_STREAM, path);
-        try {
-            startActivity(Intent.createChooser(i, "Send mail..."));
-        } catch (android.content.ActivityNotFoundException ex) {
-            Toast.makeText(MainActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
+        else {
+            Log.e("TAG", "External Storage not writable");
         }
     }
 
-    public void performFileSearch() {
-
-        // ACTION_OPEN_DOCUMENT is the intent to choose a file via the system's file
-        // browser.
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-
-        // Filter to only show results that can be "opened", such as a
-        // file (as opposed to a list of contacts or timezones)
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        // Filter to show only images, using the image MIME data type.
-        // If one wanted to search for ogg vorbis files, the type would be "audio/ogg".
-        // To search for all documents available via installed storage providers,
-        // it would be "*/*".
-        intent.setType("*/*");
-
-        startActivityForResult(intent, READ_REQUEST_CODE);
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode,
-                                 Intent resultData) {
-
-        // The ACTION_OPEN_DOCUMENT intent was sent with the request code
-        // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
-        // response to some other intent, and the code below shouldn't run at all.
-
-        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            // The document selected by the user won't be returned in the intent.
-            // Instead, a URI to that document will be contained in the return intent
-            // provided to this method as a parameter.
-            // Pull that URI using resultData.getData().
-            Uri uri = null;
-            if (resultData != null) {
-                uri = resultData.getData();
-                EditText txt = (EditText) findViewById(R.id.emailBody);
-                txt.setText(uri.toString());
-                //send("Some text", uri);
-            }
-        }
-    }
 
 
 }
