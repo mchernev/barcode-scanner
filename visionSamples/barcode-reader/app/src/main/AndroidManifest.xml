@@ -36,7 +36,9 @@
             android:name=".BarcodeCaptureActivity"
             android:label="Read Barcode"
             android:screenOrientation="portrait"/>
-        <activity android:name=".ModifyInformation" />
+        <activity
+            android:name=".ModifyInformation"
+            android:label="Edit Person"/>
         <activity
             android:name=".ListCustomers"
             android:label="Scanned People"/>

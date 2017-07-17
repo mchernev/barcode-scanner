@@ -96,7 +96,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationIcon(R.drawable.back_arrow_grey);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

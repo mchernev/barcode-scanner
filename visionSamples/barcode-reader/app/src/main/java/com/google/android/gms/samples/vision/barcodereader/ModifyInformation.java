@@ -41,7 +41,7 @@ public class ModifyInformation extends AppCompatActivity {
 
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationIcon(R.drawable.back_arrow_grey);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -55,7 +55,7 @@ public class ModifyInformation extends AppCompatActivity {
         TextView displayPhone = (TextView) findViewById(R.id.displayPhone);
         final EditText inputComment = (EditText) findViewById(R.id.inputComment);
         final TextView displayComment = (TextView) findViewById(R.id.displayComment);
-        TextView displayTime = (TextView) findViewById(R.id.displayTime);
+        final TextView displayTime = (TextView) findViewById(R.id.displayTime);
         final Button addComment = (Button) findViewById(R.id.addComment);
         final Button discard = (Button) findViewById(R.id.discard);
         final Button save = (Button) findViewById(R.id.save);
@@ -63,8 +63,9 @@ public class ModifyInformation extends AppCompatActivity {
         dbManager = new DBManager(this);
         dbManager.open();
 
-        Intent intent = getIntent();
+        final Intent intent = getIntent();
         final String json = intent.getStringExtra("QRCode");
+        final String meta = intent.getStringExtra("Meta");
 
         Gson gson = new Gson();
 
@@ -91,32 +92,97 @@ public class ModifyInformation extends AppCompatActivity {
             finish();
         }
 
-        Date date = new Date();
-        DateFormat df = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
-        df.setTimeZone(TimeZone.getDefault());
-        displayTime.setText(df.format(date));
+        if(meta != null){
+            try {
+                Map<String, Object> myMap = gson.fromJson(meta, type);
+                displayComment.setText(myMap.get("comment").toString());
+                displayTime.setText(myMap.get("date").toString());
+                //TODO: Add Author
+            }
+            catch (Exception e){
+                Intent data = new Intent();
+                data.putExtra("Display Error Message", R.string.invalid_json);
+                data.putExtra("Display Exception", e.toString());
+                setResult(CommonStatusCodes.ERROR, data);
+                finish();
+            }
+        }
+        else{
+            Date date = new Date();
+            DateFormat df = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
+            df.setTimeZone(TimeZone.getDefault());
+            displayTime.setText(df.format(date));
+            //TODO: Add Author
+        }
+        //if meta != null => I am modifying
+        //if meta == null => It is new scan
+
+        if(meta != null){
+            addComment.setText("Modify Comment");
+            inputComment.setText(displayComment.getText().toString());
+            discard.setText("Delete");
+            discard.setVisibility(View.VISIBLE);
+            save.setText("Update");
+            save.setVisibility(View.VISIBLE);
+        }
 
         addComment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 displayComment.setText(inputComment.getText());
-                addComment.setVisibility(View.INVISIBLE);
+                addComment.setVisibility(View.INVISIBLE);//add comment button disappears
+                if(meta == null) {
+                    discard.setText("Discard Person");
+                    save.setText("Add Person");
+                }
+//                else{
+//                    discard.setText("Delete");
+//                    save.setText("Update");
+//                }
                 discard.setVisibility(View.VISIBLE);
                 save.setVisibility(View.VISIBLE);
-                inputComment.setVisibility(View.INVISIBLE);
+                inputComment.setVisibility(View.INVISIBLE);//edit text field disappears
             }
         });
 
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Cursor c = dbManager.fetch();
-                if(!isInDb(displayName.getText().toString(), c))
-                    dbManager.insert(json, getMetaJSON());
-                else
-                    Toast.makeText(ModifyInformation.this, "Person already scanned", Toast.LENGTH_LONG).show();
-                Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
-                startActivity(i);
+                if(meta == null) {
+                    Cursor c = dbManager.fetch();
+                    if (!isInDb(displayName.getText().toString(), c))
+                        dbManager.insert(json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
+                    else
+                        Toast.makeText(ModifyInformation.this, "Person already scanned", Toast.LENGTH_LONG).show();
+
+                    Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
+                    startActivity(i);
+                }
+                else{
+                    //TODO: add update code (look at sql contact app)
+                    dbManager.update(Long.parseLong(intent.getStringExtra("id")), json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
+                    Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
+                    startActivity(i);
+                }
+            }
+        });
+
+        discard.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(meta == null){
+                    //TODO: Write discard code
+                    //Returns to MainActivity which restarts scan
+                    Intent i = new Intent(ModifyInformation.this, MainActivity.class);
+                    startActivity(i);
+                }
+                else{
+                    if (intent.getStringExtra("id") != null) {
+                        dbManager.delete(Long.parseLong(intent.getStringExtra("id")));
+                        Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
+                        startActivity(i);
+                    }
+                }
             }
         });
     }
@@ -152,8 +218,8 @@ public class ModifyInformation extends AppCompatActivity {
         return false;
     }
 
-    private String getMetaJSON(){
-        return "{\"comment\":\"placeholder\", \"date\":\"placeholder\", \"author\":\"admin\"}";
+    private String getMetaJSON(String comment, String time){
+        return "{\"comment\":\"" + comment + "\", \"date\":\"" + time  + "\", \"author\":\"admin\"}";
     }
 
     private boolean isInDb(String name, Cursor cursor){
@@ -175,4 +241,4 @@ public class ModifyInformation extends AppCompatActivity {
 
 }
 
-//{"name":"Han Solo", "company":"Rebels", "position":"Pilot", "phone":"555-555-555",}
+//{"name":"Han Solo", "company":"Rebels", "position":"Pilot", "phone":"555-555-555"}

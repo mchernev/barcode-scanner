@@ -27,7 +27,7 @@ public class ListCustomers extends AppCompatActivity {
     final String[] from = new String[]{DatabaseHelper._ID,
             DatabaseHelper.JSON_CUSTOMERS, DatabaseHelper.JSON_META};
 
-    final int[] to = new int[]{R.id.id, R.id.title, R.id.desc};
+    final int[] to = new int[]{R.id.id, R.id.json, R.id.meta};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +36,7 @@ public class ListCustomers extends AppCompatActivity {
 
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
-        mToolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        mToolbar.setNavigationIcon(R.drawable.back_arrow_grey);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -61,16 +61,16 @@ public class ListCustomers extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long viewId) {
                 TextView idTextView = (TextView) view.findViewById(R.id.id);
-                TextView titleTextView = (TextView) view.findViewById(R.id.title);
-                TextView descTextView = (TextView) view.findViewById(R.id.desc);
+                TextView jsonTextView = (TextView) view.findViewById(R.id.json);
+                TextView metaTextView = (TextView) view.findViewById(R.id.meta);
 
                 String id = idTextView.getText().toString();
-                String title = titleTextView.getText().toString();
-                String desc = descTextView.getText().toString();
+                String json = jsonTextView.getText().toString();
+                String meta = metaTextView.getText().toString();
 
                 Intent modify_intent = new Intent(getApplicationContext(), ModifyInformation.class);
-                modify_intent.putExtra("title", title);
-                modify_intent.putExtra("desc", desc);
+                modify_intent.putExtra("QRCode", json);
+                modify_intent.putExtra("Meta", meta);
                 modify_intent.putExtra("id", id);
 
                 startActivity(modify_intent);
