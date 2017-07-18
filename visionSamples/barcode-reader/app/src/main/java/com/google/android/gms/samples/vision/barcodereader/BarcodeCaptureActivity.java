@@ -41,6 +41,9 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -54,8 +57,12 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * Activity for the multi-tracker app.  This app detects barcodes and displays the value with the
@@ -85,6 +92,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private GestureDetector gestureDetector;
 
     public static BarcodeGraphic mGraphic = null;
+    private static Barcode currentBarcode = null;
+
+    private DBManager dbManager;
 
     /**
      * Initializes the UI and creates the detector pipeline.
@@ -106,6 +116,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay<BarcodeGraphic>) findViewById(R.id.graphicOverlay);
+
+        dbManager = new DBManager(this);
+        dbManager.open();
 
         // read parameters from the intent used to launch the activity.
         boolean autoFocus = getIntent().getBooleanExtra(AutoFocus, false);
@@ -187,10 +200,62 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     }
 
     public void foundBarcode(Barcode bc) {
-        Intent data = new Intent();
-        data.putExtra(BarcodeObject, bc);
-        setResult(CommonStatusCodes.SUCCESS, data);
-        finish();
+//        Intent data = new Intent();
+//        data.putExtra(BarcodeObject, bc);
+//        setResult(CommonStatusCodes.SUCCESS, data);
+//        finish();
+        if(currentBarcode != bc) {
+            currentBarcode = bc;
+            displayOnOverlay(extractInfoJson(bc));
+        }
+    }
+
+    private MapWrapper extractInfoJson(Barcode bc){
+        String json = bc.displayValue;
+        Gson gson = new Gson();
+        Type type = new TypeToken<Map<String, Object>>(){}.getType();
+        try {
+            Map<String, Object> myMap = gson.fromJson(json, type);
+            MapWrapper mw = new MapWrapper(myMap);
+            return mw;
+        }
+        catch (Exception e){
+            Log.e("TAG", e.toString());
+            return new MapWrapper();
+        }
+    }
+
+    private void displayOnOverlay(MapWrapper mw){
+        String name = null;
+        String company = null;
+
+        TextView nameView = (TextView) findViewById(R.id.nameOverlay);
+        TextView companyView = (TextView) findViewById(R.id.companyOverlay);
+        Button discardView = (Button) findViewById(R.id.btnDiscardOverlay);
+        Button editView = (Button) findViewById(R.id.btnEditOverlay);
+
+        try {
+            name = mw.getName();
+            company = mw.getCompany();
+            nameView.setText(name);
+            companyView.setText(company);
+            nameView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            companyView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            discardView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            editView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+        }
+        catch(Exception e){
+            Log.e("TAG", e.toString());
+            Toast.makeText(this, "Invalid QR code scanned", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void addPerson(){
+
+    }
+
+    private void discardPerson(){
+
     }
 
     /**

@@ -34,6 +34,7 @@ public class MapWrapper {
     public Date getTimeAdded(){return timeAdded;}
     public String getAuthor(){return author;}
 
+    public String getId(){return  map.get("id").toString();}
     public String getName(){return map.get("name").toString();}
     public String getCompany(){return map.get("company").toString();}
     public String getPosition(){return map.get("position").toString();}
