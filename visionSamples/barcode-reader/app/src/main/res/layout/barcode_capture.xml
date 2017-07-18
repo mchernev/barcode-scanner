@@ -42,33 +42,48 @@
         android:id="@+id/nameOverlay"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:text=""
-        android:textColor="#FFFFFF" />
+        android:text="sssssss"
+        android:textColor="#FFFFFF"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
     <TextView
         android:id="@+id/companyOverlay"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:text=""
+        android:text="sssssss"
+        android:textColor="#FFFFFF"
         android:layout_below="@+id/nameOverlay"
-        android:textColor="#FFFFFF" />
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:id="@+id/btnDiscardOverlay"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
         android:backgroundTint="#ff5555"
         android:text="discard"
-        android:textColor="#FFFFFF" />
+        android:textColor="#FFFFFF"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"/>
     <Button
         android:id="@+id/btnEditOverlay"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:text="edit"
-        android:layout_toLeftOf="@+id/btnDiscardOverlay"
-        android:layout_toStartOf="@+id/btnDiscardOverlay"
-        android:textColor="#FFFFFF" />
+        android:textColor="#FFFFFF"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:id="@+id/idOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:text=""
+        android:visibility="invisible"
+        android:layout_alignParentTop="true"
+        android:layout_toRightOf="@+id/nameOverlay"
+        android:layout_toEndOf="@+id/nameOverlay" />
 
   </RelativeLayout>
 

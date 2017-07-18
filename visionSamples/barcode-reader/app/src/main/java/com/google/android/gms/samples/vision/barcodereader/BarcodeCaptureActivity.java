@@ -25,6 +25,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,7 +55,6 @@ import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSourc
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSourcePreview;
 
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.GraphicOverlay;
-import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -62,7 +63,11 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Activity for the multi-tracker app.  This app detects barcodes and displays the value with the
@@ -92,7 +97,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private GestureDetector gestureDetector;
 
     public static BarcodeGraphic mGraphic = null;
-    private static Barcode currentBarcode = null;
+    private Barcode currentBarcode = null;
 
     private DBManager dbManager;
 
@@ -136,25 +141,17 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
-        /*if(!mGraphicOverlay.getGraphics().isEmpty()) {
-            Barcode barcode = null;
-            for (BarcodeGraphic graphic : mGraphicOverlay.getGraphics()) {
-                barcode = graphic.getBarcode();
-                break;
+        final Button discardBtn = (Button) findViewById(R.id.btnDiscardOverlay);
+        discardBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                discardPerson();
             }
-            if (barcode != null) {
-                Intent data = new Intent();
-                data.putExtra(BarcodeObject, barcode);
-                setResult(CommonStatusCodes.SUCCESS, data);
-                finish();
-            }
-        }*/
+        });
 
-        /*
-        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
-                Snackbar.LENGTH_LONG)
-                .show();
-        */
+//        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
+//                Snackbar.LENGTH_LONG)
+//                .show();
     }
 
     /**
@@ -204,13 +201,13 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 //        data.putExtra(BarcodeObject, bc);
 //        setResult(CommonStatusCodes.SUCCESS, data);
 //        finish();
-        if(currentBarcode != bc) {
+        if(currentBarcode == null || !bc.displayValue.equals(currentBarcode.displayValue)){
             currentBarcode = bc;
-            displayOnOverlay(extractInfoJson(bc));
+            displayOnOverlay(bc);
         }
     }
 
-    private MapWrapper extractInfoJson(Barcode bc){
+    private MapWrapper extractJsonToMap(Barcode bc){
         String json = bc.displayValue;
         Gson gson = new Gson();
         Type type = new TypeToken<Map<String, Object>>(){}.getType();
@@ -225,24 +222,38 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         }
     }
 
-    private void displayOnOverlay(MapWrapper mw){
+    private void displayOnOverlay(Barcode bc){
+        MapWrapper mw = extractJsonToMap(bc);
+
         String name = null;
         String company = null;
+        String id = null;
 
         TextView nameView = (TextView) findViewById(R.id.nameOverlay);
         TextView companyView = (TextView) findViewById(R.id.companyOverlay);
+        TextView idView = (TextView) findViewById(R.id.idOverlay);
         Button discardView = (Button) findViewById(R.id.btnDiscardOverlay);
         Button editView = (Button) findViewById(R.id.btnEditOverlay);
+        RelativeLayout rl = (RelativeLayout) findViewById(R.id.infoOverlay);
 
         try {
             name = mw.getName();
             company = mw.getCompany();
+            id = mw.getId();
             nameView.setText(name);
             companyView.setText(company);
+            idView.setText(id);
             nameView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             companyView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             discardView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             editView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+            rl.setBackgroundColor(Color.parseColor("#666666"));
+            if(!isInDb(mw.getId(), dbManager.fetch()).equals("")){
+                rl.setBackgroundColor(Color.parseColor("#ff1111"));
+            }
+            else{
+                addPerson(bc);
+            }
         }
         catch(Exception e){
             Log.e("TAG", e.toString());
@@ -250,12 +261,72 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         }
     }
 
-    private void addPerson(){
-
+    private void addPerson(Barcode bc){
+        dbManager.insert(bc.displayValue, getMetaJSON("", getTime()));
+        Toast.makeText(this, "Person added", Toast.LENGTH_LONG).show();
     }
 
-    private void discardPerson(){
+    public void discardPerson(){
+        TextView idView = (TextView) findViewById(R.id.idOverlay);
 
+        String id = isInDb(idView.getText().toString(), dbManager.fetch());
+        dbManager.delete(Long.parseLong(id));
+
+        hideInfoOverlay();
+    }
+
+    private void editPerson(){
+        //Edit button sends to ModifyActivity
+        Intent i = new Intent(BarcodeCaptureActivity.this, ModifyInformation.class);
+        i.putExtra("QRCode", currentBarcode.displayValue);
+        startActivity(i);
+        //Look at MainActivity and try to remove startActivityForResult without braking the app
+    }
+
+    private void hideInfoOverlay(){
+        TextView nameView = (TextView) findViewById(R.id.nameOverlay);
+        TextView companyView = (TextView) findViewById(R.id.companyOverlay);
+        Button discardView = (Button) findViewById(R.id.btnDiscardOverlay);
+        Button editView = (Button) findViewById(R.id.btnEditOverlay);
+        RelativeLayout rl = (RelativeLayout) findViewById(R.id.infoOverlay);
+        rl.setBackgroundColor(Color.parseColor("#666666"));
+
+        nameView.setHeight(0);
+        discardView.setLayoutParams(new RelativeLayout.LayoutParams(0, 0));
+        discardView.getLayoutParams().width = RelativeLayout.LayoutParams.WRAP_CONTENT;
+        editView.setLayoutParams(new RelativeLayout.LayoutParams(0, 0));
+        editView.getLayoutParams().width = RelativeLayout.LayoutParams.WRAP_CONTENT;
+        companyView.setHeight(0);
+    }
+
+    private String isInDb(String id, Cursor cursor){//cursor = dbManager.fetch()
+        if(cursor.getCount()!=0){
+            if(cursor.moveToFirst()){
+                String match;
+                Gson gson = new Gson();
+                Type type = new TypeToken<Map<String, Object>>(){}.getType();
+                do{
+                    Map<String, Object> myMap = gson.fromJson(cursor.getString(cursor.getColumnIndex("customer")), type);
+                    match = myMap.get("id").toString();
+                    if(match.equals(id))
+                        //return true;
+                        return cursor.getString(cursor.getColumnIndex("_id"));
+                }while(cursor.moveToNext());
+            }
+        }
+        //return false;
+        return "";
+    }
+
+    private String getMetaJSON(String comment, String time){
+        return "{\"comment\":\"" + comment + "\", \"date\":\"" + time + "\", \"author\":\"admin\"}";
+    }
+
+    private String getTime(){
+        Date date = new Date();
+        DateFormat df = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
+        df.setTimeZone(TimeZone.getDefault());
+        return df.format(date);
     }
 
     /**
@@ -365,6 +436,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         startCameraSource();
+        mGraphic = null;
     }
 
     /**
@@ -376,6 +448,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         if (mPreview != null) {
             mPreview.stop();
         }
+        mGraphic = null;
     }
 
     /**
