@@ -85,11 +85,13 @@ public class ModifyInformation extends AppCompatActivity {
             //displayName.setText(((ArrayList)myMap.get("array")).get(2).toString());
         }
         catch (Exception e){
-            Intent data = new Intent();
-            data.putExtra("Display Error Message", R.string.invalid_json);
-            data.putExtra("Display Exception", e.toString());
-            setResult(CommonStatusCodes.ERROR, data);
-            finish();
+//            Intent data = new Intent();
+//            data.putExtra("Display Error Message", R.string.invalid_json);
+//            data.putExtra("Display Exception", e.toString());
+//            setResult(CommonStatusCodes.ERROR, data);
+//            finish();
+            Log.e("TAG", e.toString());
+            Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_LONG).show();
         }
 
         if(meta != null){
@@ -159,7 +161,6 @@ public class ModifyInformation extends AppCompatActivity {
                     startActivity(i);
                 }
                 else{
-                    //TODO: add update code (look at sql contact app)
                     dbManager.update(Long.parseLong(intent.getStringExtra("id")), json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
                     Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
                     startActivity(i);

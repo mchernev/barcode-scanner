@@ -98,6 +98,11 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
     public static BarcodeGraphic mGraphic = null;
     private Barcode currentBarcode = null;
+    private String currentTime = null;
+
+    private final Handler h = new Handler();
+    private final int delay = 100; //milliseconds
+    private Runnable r = null;
 
     private DBManager dbManager;
 
@@ -149,6 +154,16 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             }
         });
 
+        final Button editBtn = (Button) findViewById(R.id.btnEditOverlay);
+        editBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editPerson();
+            }
+        });
+
+        barcodeListener();
+
 //        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
 //                Snackbar.LENGTH_LONG)
 //                .show();
@@ -196,15 +211,34 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         return b || c || super.onTouchEvent(e);
     }
 
+    private void barcodeListener(){
+        Runnable r = new Runnable(){
+            public void run(){
+                if(mGraphic != null) {
+                    BarcodeGraphic bg = mGraphic;
+                    if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {
+                        currentBarcode = bg.getBarcode();
+                        foundBarcode(bg.getBarcode());
+                        //Log.d("JSON", bg.getBarcode().displayValue);
+                    }
+                }
+                h.postDelayed(this, delay);
+            }
+        };
+        h.postDelayed(r, delay);
+    }
+
     public void foundBarcode(Barcode bc) {
 //        Intent data = new Intent();
 //        data.putExtra(BarcodeObject, bc);
 //        setResult(CommonStatusCodes.SUCCESS, data);
 //        finish();
-        if(currentBarcode == null || !bc.displayValue.equals(currentBarcode.displayValue)){
-            currentBarcode = bc;
-            displayOnOverlay(bc);
-        }
+//        if(currentBarcode == null || !bc.displayValue.equals(currentBarcode.displayValue)){
+//            currentBarcode = bc;
+//            displayOnOverlay(bc);
+//        }
+        h.removeCallbacks(r);
+        displayOnOverlay(bc);
     }
 
     private MapWrapper extractJsonToMap(Barcode bc){
@@ -247,29 +281,34 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             companyView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             discardView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             editView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
-            rl.setBackgroundColor(Color.parseColor("#666666"));
+            //rl.setBackgroundColor(Color.parseColor("#666666"));
+            //Log.d("COLOR", "Color changed to grey");
             if(!isInDb(mw.getId(), dbManager.fetch()).equals("")){
                 rl.setBackgroundColor(Color.parseColor("#ff1111"));
+                //Log.d("COLOR", "Color changed to red");
             }
             else{
+                rl.setBackgroundColor(Color.parseColor("#666666"));
+                //Log.d("COLOR", "Color changed to grey");
                 addPerson(bc);
             }
+            barcodeListener();
         }
         catch(Exception e){
             Log.e("TAG", e.toString());
-            Toast.makeText(this, "Invalid QR code scanned", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_SHORT).show();
         }
     }
 
     private void addPerson(Barcode bc){
-        dbManager.insert(bc.displayValue, getMetaJSON("", getTime()));
-        Toast.makeText(this, "Person added", Toast.LENGTH_LONG).show();
+        currentTime = getTime();
+        dbManager.insert(bc.displayValue, getMetaJSON("", currentTime));
+        Toast.makeText(this, getNameOverlay() + " added", Toast.LENGTH_LONG).show();
     }
 
     public void discardPerson(){
-        TextView idView = (TextView) findViewById(R.id.idOverlay);
-
-        String id = isInDb(idView.getText().toString(), dbManager.fetch());
+        //TextView idView = (TextView) findViewById(R.id.idOverlay);
+        String id = isInDb(getIdOverlay(), dbManager.fetch());
         dbManager.delete(Long.parseLong(id));
 
         hideInfoOverlay();
@@ -279,8 +318,10 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         //Edit button sends to ModifyActivity
         Intent i = new Intent(BarcodeCaptureActivity.this, ModifyInformation.class);
         i.putExtra("QRCode", currentBarcode.displayValue);
+        i.putExtra("Meta", getMetaJSON("", currentTime));
+        String id = isInDb(getIdOverlay(), dbManager.fetch());
+        i.putExtra("id", id);
         startActivity(i);
-        //Look at MainActivity and try to remove startActivityForResult without braking the app
     }
 
     private void hideInfoOverlay(){
@@ -329,6 +370,16 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         return df.format(date);
     }
 
+    private String getNameOverlay(){
+        TextView nameView = (TextView) findViewById(R.id.nameOverlay);
+        return nameView.getText().toString();
+    }
+
+    private String getIdOverlay(){
+        TextView idView = (TextView) findViewById(R.id.idOverlay);
+        return idView.getText().toString();
+    }
+
     /**
      * Creates and starts the camera.  Note that this uses a higher resolution in comparison
      * to other detection examples to enable the barcode detector to detect small barcodes
@@ -373,18 +424,22 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
          ** BarcodeGraphic and resets the global static variable
         */
 
-        final Handler h = new Handler();
-        final int delay = 100; //milliseconds
-
-        h.postDelayed(new Runnable(){
-            public void run(){
-                if(mGraphic != null) {
-                    BarcodeGraphic bg = mGraphic;
-                    foundBarcode(bg.getBarcode());
-                }
-                h.postDelayed(this, delay);
-            }
-        }, delay);
+//        final Handler h = new Handler();
+//        final int delay = 100; //milliseconds
+//
+//        h.postDelayed(new Runnable(){
+//            public void run(){
+//                if(mGraphic != null) {
+//                    BarcodeGraphic bg = mGraphic;
+//                    if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {
+//                        currentBarcode = bg.getBarcode();
+//                        foundBarcode(bg.getBarcode());
+//                        Log.d("JSON", bg.getBarcode().displayValue);
+//                    }
+//                }
+//                h.postDelayed(this, delay);
+//            }
+//        }, delay);
 
 
         if (!barcodeDetector.isOperational()) {
@@ -449,6 +504,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             mPreview.stop();
         }
         mGraphic = null;
+        h.removeCallbacks(r);
     }
 
     /**

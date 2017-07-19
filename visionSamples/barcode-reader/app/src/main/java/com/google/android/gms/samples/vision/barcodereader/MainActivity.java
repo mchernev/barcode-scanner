@@ -76,8 +76,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(this, BarcodeCaptureActivity.class);
         intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
         intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
-
-        startActivityForResult(intent, RC_BARCODE_CAPTURE);
+        startActivity(intent);
+        //startActivityForResult(intent, RC_BARCODE_CAPTURE);
 
         findViewById(R.id.read_barcode).setOnClickListener(this);
     }
@@ -122,47 +122,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @see #createPendingResult
      * @see #setResult(int)
      */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        BarcodeCaptureActivity.mGraphic = null;
-        if (requestCode == RC_BARCODE_CAPTURE) {
-            if (resultCode == CommonStatusCodes.SUCCESS) {
-                if (data != null) {
-                    Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-                    statusMessage.setText(R.string.barcode_success);
-                    //barcodeValue.setText(barcode.displayValue);
-                    Log.d(TAG, "Barcode read: " + barcode.displayValue);
-                    //TextView result = (TextView) findViewById(R.id.bar_res);
-                    //result.setText(barcode.displayValue);
-                    Intent i = new Intent(MainActivity.this, ModifyInformation.class);
-                    i.putExtra("QRCode", barcode.displayValue);
-                    startActivityForResult(i, MODIFY_INFO);
-                    autoFocus.setVisibility(View.INVISIBLE);
-                    useFlash.setVisibility(View.INVISIBLE);
-                } else {
-                    statusMessage.setText(R.string.barcode_failure);
-                    Log.d(TAG, "No barcode captured, intent data is null");
-                }
-            } else {
-                statusMessage.setText(String.format(getString(R.string.barcode_error),
-                        CommonStatusCodes.getStatusCodeString(resultCode)));
-            }
-        }
-
-        if(requestCode == MODIFY_INFO){
-            if(resultCode == CommonStatusCodes.ERROR){
-                if(data != null){
-                    String message = getResources().getString(R.string.invalid_json) + "\n\n" + data.getStringExtra("Display Exception");
-                    statusMessage.setText(message);
-                    Log.d(TAG, "Error after barcode was read: " + data.getStringExtra("Display Exception"));
-                }
-            }
-        }
-
-        else {
-            super.onActivityResult(requestCode, resultCode, data);
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        BarcodeCaptureActivity.mGraphic = null;
+//        if (requestCode == RC_BARCODE_CAPTURE) {
+//            if (resultCode == CommonStatusCodes.SUCCESS) {
+//                if (data != null) {
+//                    Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
+//                    statusMessage.setText(R.string.barcode_success);
+//                    //barcodeValue.setText(barcode.displayValue);
+//                    Log.d(TAG, "Barcode read: " + barcode.displayValue);
+//                    //TextView result = (TextView) findViewById(R.id.bar_res);
+//                    //result.setText(barcode.displayValue);
+//                    //Intent i = new Intent(MainActivity.this, ModifyInformation.class);
+//                    //i.putExtra("QRCode", barcode.displayValue);
+//                    //startActivityForResult(i, MODIFY_INFO);
+//                    autoFocus.setVisibility(View.INVISIBLE);
+//                    useFlash.setVisibility(View.INVISIBLE);
+//                } else {
+//                    statusMessage.setText(R.string.barcode_failure);
+//                    Log.d(TAG, "No barcode captured, intent data is null");
+//                }
+//            } else {
+//                statusMessage.setText(String.format(getString(R.string.barcode_error),
+//                        CommonStatusCodes.getStatusCodeString(resultCode)));
+//            }
+//        }
+//
+////        if(requestCode == MODIFY_INFO){
+////            if(resultCode == CommonStatusCodes.ERROR){
+////                if(data != null){
+////                    String message = getResources().getString(R.string.invalid_json) + "\n\n" + data.getStringExtra("Display Exception");
+////                    statusMessage.setText(message);
+////                    Log.d(TAG, "Error after barcode was read: " + data.getStringExtra("Display Exception"));
+////                }
+////            }
+////        }
+//
+//        else {
+//            super.onActivityResult(requestCode, resultCode, data);
+//        }
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
