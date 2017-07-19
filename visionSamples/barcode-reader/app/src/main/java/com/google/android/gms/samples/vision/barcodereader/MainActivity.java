@@ -74,9 +74,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         useFlash.setVisibility(View.INVISIBLE);
 
         Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-        intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
-        intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
         startActivity(intent);
+        //intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
+        //intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
         //startActivityForResult(intent, RC_BARCODE_CAPTURE);
 
         findViewById(R.id.read_barcode).setOnClickListener(this);

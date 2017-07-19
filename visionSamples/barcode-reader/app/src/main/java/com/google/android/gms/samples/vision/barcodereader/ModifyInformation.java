@@ -1,8 +1,6 @@
 package com.google.android.gms.samples.vision.barcodereader;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,20 +13,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.vision.text.Text;
 import com.google.gson.Gson;
-import com.google.gson.internal.ObjectConstructor;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Map;
-import java.util.TimeZone;
 
 public class ModifyInformation extends AppCompatActivity {
 
@@ -50,15 +39,14 @@ public class ModifyInformation extends AppCompatActivity {
         });
 
         final TextView displayName = (TextView) findViewById(R.id.displayName);
-        TextView displayCompany = (TextView) findViewById(R.id.displayCompany);
-        TextView displayPosition = (TextView) findViewById(R.id.displayPosition);
-        TextView displayPhone = (TextView) findViewById(R.id.displayPhone);
+        final TextView displayCompany = (TextView) findViewById(R.id.displayCompany);
+        final TextView displayPosition = (TextView) findViewById(R.id.displayPosition);
+        final TextView displayPhone = (TextView) findViewById(R.id.displayPhone);
         final EditText inputComment = (EditText) findViewById(R.id.inputComment);
         final TextView displayComment = (TextView) findViewById(R.id.displayComment);
         final TextView displayTime = (TextView) findViewById(R.id.displayTime);
-        final Button addComment = (Button) findViewById(R.id.addComment);
-        final Button discard = (Button) findViewById(R.id.discard);
-        final Button save = (Button) findViewById(R.id.save);
+        final Button deleteBtn = (Button) findViewById(R.id.delete);
+        final Button updateBtn = (Button) findViewById(R.id.update);
 
         dbManager = new DBManager(this);
         dbManager.open();
@@ -66,6 +54,7 @@ public class ModifyInformation extends AppCompatActivity {
         final Intent intent = getIntent();
         final String json = intent.getStringExtra("QRCode");
         final String meta = intent.getStringExtra("Meta");
+        final Long id = Long.parseLong(intent.getStringExtra("id"));
 
         Gson gson = new Gson();
 
@@ -78,112 +67,42 @@ public class ModifyInformation extends AppCompatActivity {
             displayCompany.setText(mw.getCompany());
             displayPosition.setText(mw.getPosition());
             displayPhone.setText(mw.getPhone());
-            //displayName.setText(myMap.get("name").toString());
-            //displayCompany.setText(myMap.get("company").toString());
-            //displayPosition.setText(myMap.get("position").toString());
-            //displayPhone.setText(myMap.get("phone").toString());
             //displayName.setText(((ArrayList)myMap.get("array")).get(2).toString());
         }
         catch (Exception e){
-//            Intent data = new Intent();
-//            data.putExtra("Display Error Message", R.string.invalid_json);
-//            data.putExtra("Display Exception", e.toString());
-//            setResult(CommonStatusCodes.ERROR, data);
-//            finish();
             Log.e("TAG", e.toString());
             Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_LONG).show();
         }
 
-        if(meta != null){
-            try {
-                Map<String, Object> myMap = gson.fromJson(meta, type);
-                displayComment.setText(myMap.get("comment").toString());
-                displayTime.setText(myMap.get("date").toString());
-                //TODO: Add Author
-            }
-            catch (Exception e){
-                Intent data = new Intent();
-                data.putExtra("Display Error Message", R.string.invalid_json);
-                data.putExtra("Display Exception", e.toString());
-                setResult(CommonStatusCodes.ERROR, data);
-                finish();
-            }
-        }
-        else{
-            Date date = new Date();
-            DateFormat df = new SimpleDateFormat("HH:mm:ss dd-MM-yyyy");
-            df.setTimeZone(TimeZone.getDefault());
-            displayTime.setText(df.format(date));
+        try {
+            Map<String, Object> myMap = gson.fromJson(meta, type);
+            displayComment.setText(myMap.get("comment").toString());
+            inputComment.setText(myMap.get("comment").toString());
+            displayTime.setText(myMap.get("date").toString());
             //TODO: Add Author
-        }
-        //if meta != null => I am modifying
-        //if meta == null => It is new scan
-
-        if(meta != null){
-            addComment.setText("Modify Comment");
-            inputComment.setText(displayComment.getText().toString());
-            discard.setText("Delete");
-            discard.setVisibility(View.VISIBLE);
-            save.setText("Update");
-            save.setVisibility(View.VISIBLE);
+        } catch (Exception e) {
+            Log.e("TAG", e.toString());
+            Toast.makeText(this, "Invalid Meta JSON", Toast.LENGTH_LONG).show();
         }
 
-        addComment.setOnClickListener(new View.OnClickListener() {
+        //TODO: consider saving the current time when updating a person
+        updateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                displayComment.setText(inputComment.getText());
-                addComment.setVisibility(View.INVISIBLE);//add comment button disappears
-                if(meta == null) {
-                    discard.setText("Discard Person");
-                    save.setText("Add Person");
-                }
-//                else{
-//                    discard.setText("Delete");
-//                    save.setText("Update");
-//                }
-                discard.setVisibility(View.VISIBLE);
-                save.setVisibility(View.VISIBLE);
-                inputComment.setVisibility(View.INVISIBLE);//edit text field disappears
+                    displayComment.setText(inputComment.getText());
+                    dbManager.update(id, json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
+                    Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
+                    startActivity(i);
             }
         });
 
-        save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(meta == null) {
-                    Cursor c = dbManager.fetch();
-                    if (!isInDb(displayName.getText().toString(), c))
-                        dbManager.insert(json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
-                    else
-                        Toast.makeText(ModifyInformation.this, "Person already scanned", Toast.LENGTH_LONG).show();
-
-                    Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
-                    startActivity(i);
-                }
-                else{
-                    dbManager.update(Long.parseLong(intent.getStringExtra("id")), json, getMetaJSON(displayComment.getText().toString(), displayTime.getText().toString()));
-                    Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
-                    startActivity(i);
-                }
-            }
-        });
-
-        discard.setOnClickListener(new View.OnClickListener() {
+        //TODO: consider adding an ARE YOU SURE message before deleting
+        deleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(meta == null){
-                    //TODO: Write discard code
-                    //Returns to MainActivity which restarts scan
-                    Intent i = new Intent(ModifyInformation.this, MainActivity.class);
-                    startActivity(i);
-                }
-                else{
-                    if (intent.getStringExtra("id") != null) {
-                        dbManager.delete(Long.parseLong(intent.getStringExtra("id")));
+                        dbManager.delete(id);
                         Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
                         startActivity(i);
-                    }
-                }
             }
         });
     }
@@ -221,23 +140,6 @@ public class ModifyInformation extends AppCompatActivity {
 
     private String getMetaJSON(String comment, String time){
         return "{\"comment\":\"" + comment + "\", \"date\":\"" + time  + "\", \"author\":\"admin\"}";
-    }
-
-    private boolean isInDb(String name, Cursor cursor){
-        if(cursor.getCount()!=0){
-            if(cursor.moveToFirst()){
-                String match;
-                Gson gson = new Gson();
-                Type type = new TypeToken<Map<String, Object>>(){}.getType();
-                do{
-                    Map<String, Object> myMap = gson.fromJson(cursor.getString(cursor.getColumnIndex("customer")), type);
-                    match = myMap.get("name").toString();
-                    if(match.equals(name))
-                        return true;
-                }while(cursor.moveToNext());
-            }
-        }
-        return false;
     }
 
 }
