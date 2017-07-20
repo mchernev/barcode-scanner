@@ -164,7 +164,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
         r = new Runnable(){
             public void run(){
-                Log.d("Run", "Am In Loop");
+                //Log.d("Run", "Am In Loop");
                 if(mGraphic != null) {
                     BarcodeGraphic bg = mGraphic;
                     if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {

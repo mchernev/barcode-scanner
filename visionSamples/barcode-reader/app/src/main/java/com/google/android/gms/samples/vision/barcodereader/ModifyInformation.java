@@ -87,7 +87,6 @@ public class ModifyInformation extends AppCompatActivity {
             Toast.makeText(this, R.string.invalid_meta_json, Toast.LENGTH_LONG).show();
         }
 
-        //TODO: consider saving the current time when updating a person
         updateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -163,4 +162,4 @@ public class ModifyInformation extends AppCompatActivity {
 
 }
 
-//{"name":"Gosho", "company":"Chistota", "position":"Chistach", "phone":"555-555-555"}
+//{"name":"John Doe", "company":"ABC", "position":"Unknown", "phone":"555-555-555"}
