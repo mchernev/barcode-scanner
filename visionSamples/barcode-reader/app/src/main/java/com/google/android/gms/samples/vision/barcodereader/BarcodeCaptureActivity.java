@@ -102,7 +102,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
     private final Handler h = new Handler();
     private final int delay = 100; //milliseconds
-    private Runnable r = null;
+    private static Runnable r;
 
     private DBManager dbManager;
 
@@ -212,7 +212,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     }
 
     private void barcodeListener(){
-        Runnable r = new Runnable(){
+        r = new Runnable(){
             public void run(){
                 if(mGraphic != null) {
                     BarcodeGraphic bg = mGraphic;
@@ -295,15 +295,21 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             barcodeListener();
         }
         catch(Exception e){
-            Log.e("TAG", e.toString());
-            Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_SHORT).show();
+            Log.e("Barcode Scan", e.toString());
+            //Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_SHORT).show();
+            Snackbar.make(mGraphicOverlay, R.string.invalid_json,
+                Snackbar.LENGTH_LONG)
+                .show();
         }
     }
 
     private void addPerson(Barcode bc){
         currentTime = getTime();
         dbManager.insert(bc.displayValue, getMetaJSON("", currentTime));
-        Toast.makeText(this, getNameOverlay() + " added", Toast.LENGTH_LONG).show();
+//        Toast.makeText(this, getNameOverlay() + " added", Toast.LENGTH_LONG).show();
+        Snackbar.make(mGraphicOverlay, getNameOverlay() + " was added to your list",
+                Snackbar.LENGTH_LONG)
+                .show();
     }
 
     public void discardPerson(){
@@ -423,24 +429,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
          ** through a global static variable. If it has, then MainActivity receives the
          ** BarcodeGraphic and resets the global static variable
         */
-
-//        final Handler h = new Handler();
-//        final int delay = 100; //milliseconds
-//
-//        h.postDelayed(new Runnable(){
-//            public void run(){
-//                if(mGraphic != null) {
-//                    BarcodeGraphic bg = mGraphic;
-//                    if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {
-//                        currentBarcode = bg.getBarcode();
-//                        foundBarcode(bg.getBarcode());
-//                        Log.d("JSON", bg.getBarcode().displayValue);
-//                    }
-//                }
-//                h.postDelayed(this, delay);
-//            }
-//        }, delay);
-
 
         if (!barcodeDetector.isOperational()) {
             // Note: The first time that an app using the barcode or face API is installed on a
