@@ -88,12 +88,14 @@ public class ListCustomers extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_scan: {
-                Intent i = new Intent(this, MainActivity.class);
+                Intent i = new Intent(this, BarcodeCaptureActivity.class);
                 startActivity(i);
                 break;
             }
             case R.id.action_list: {
-                // do something
+//                Intent i = new Intent(this, ListCustomers.class);
+//                startActivity(i);
+//                Already here
                 break;
             }
             case R.id.action_export: {

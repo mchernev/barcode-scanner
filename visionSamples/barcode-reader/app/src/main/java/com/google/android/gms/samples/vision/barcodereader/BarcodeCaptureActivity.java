@@ -143,7 +143,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             requestCameraPermission();
         }
 
-        gestureDetector = new GestureDetector(this, new CaptureGestureListener());
+//        gestureDetector = new GestureDetector(this, new CaptureGestureListener());
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
         final Button discardBtn = (Button) findViewById(R.id.btnDiscardOverlay);
@@ -162,7 +162,22 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             }
         });
 
-        barcodeListener();
+        r = new Runnable(){
+            public void run(){
+                Log.d("Run", "Am In Loop");
+                if(mGraphic != null) {
+                    BarcodeGraphic bg = mGraphic;
+                    if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {
+                        currentBarcode = bg.getBarcode();
+                        foundBarcode(bg.getBarcode());
+                        //Log.d("JSON", bg.getBarcode().displayValue);
+                    }
+                }
+                h.postDelayed(this, delay);
+            }
+        };
+
+//        barcodeListener();
 
 //        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
 //                Snackbar.LENGTH_LONG)
@@ -212,19 +227,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     }
 
     private void barcodeListener(){
-        r = new Runnable(){
-            public void run(){
-                if(mGraphic != null) {
-                    BarcodeGraphic bg = mGraphic;
-                    if(currentBarcode == null || !bg.getBarcode().displayValue.equals(currentBarcode.displayValue)) {
-                        currentBarcode = bg.getBarcode();
-                        foundBarcode(bg.getBarcode());
-                        //Log.d("JSON", bg.getBarcode().displayValue);
-                    }
-                }
-                h.postDelayed(this, delay);
-            }
-        };
         h.postDelayed(r, delay);
     }
 
@@ -251,7 +253,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             return mw;
         }
         catch (Exception e){
-            Log.e("TAG", e.toString());
+            Log.e("JSON Parse Error", e.toString());
             return new MapWrapper();
         }
     }
@@ -281,8 +283,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             companyView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             discardView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             editView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
-            //rl.setBackgroundColor(Color.parseColor("#666666"));
-            //Log.d("COLOR", "Color changed to grey");
             if(!isInDb(mw.getId(), dbManager.fetch()).equals("")){
                 rl.setBackgroundColor(Color.parseColor("#ff1111"));
                 //Log.d("COLOR", "Color changed to red");
@@ -307,7 +307,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         currentTime = getTime();
         dbManager.insert(bc.displayValue, getMetaJSON("", currentTime));
 //        Toast.makeText(this, getNameOverlay() + " added", Toast.LENGTH_LONG).show();
-        Snackbar.make(mGraphicOverlay, getNameOverlay() + " was added to your list",
+        Snackbar.make(mGraphicOverlay, getNameOverlay() + getString(R.string.added_to_list_message),
                 Snackbar.LENGTH_LONG)
                 .show();
     }
@@ -356,12 +356,10 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                     Map<String, Object> myMap = gson.fromJson(cursor.getString(cursor.getColumnIndex("customer")), type);
                     match = myMap.get("id").toString();
                     if(match.equals(id))
-                        //return true;
                         return cursor.getString(cursor.getColumnIndex("_id"));
                 }while(cursor.moveToNext());
             }
         }
-        //return false;
         return "";
     }
 
@@ -480,6 +478,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         super.onResume();
         startCameraSource();
         mGraphic = null;
+        barcodeListener();
     }
 
     /**
@@ -568,20 +567,21 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_scan: {
-                //Intent i = new Intent(this, MainActivity.class);
+                //Intent i = new Intent(this, BarcodeCaptureActivity.class);
                 //startActivity(i);
                 //Already here
                 break;
             }
             case R.id.action_list: {
-                // do something
+                Intent i = new Intent(this, ListCustomers.class);
+                startActivity(i);
                 break;
             }
             case R.id.action_export: {
                 // do something
                 break;
             }
-            case R.id.action_info: {
+            case R.id.action_info: {//change to info page. Use as list because of broken screen
                 Intent i = new Intent(this, ListCustomers.class);
                 startActivity(i);
                 break;
@@ -616,55 +616,55 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * onTap returns the tapped barcode result to the calling Activity.
-     *
-     * @param rawX - the raw position of the tap
-     * @param rawY - the raw position of the tap.
-     * @return true if the activity is ending.
-     */
-    private boolean onTap(float rawX, float rawY) {
-        // Find tap point in preview frame coordinates.
-        int[] location = new int[2];
-        mGraphicOverlay.getLocationOnScreen(location);
-        float x = (rawX - location[0]) / mGraphicOverlay.getWidthScaleFactor();
-        float y = (rawY - location[1]) / mGraphicOverlay.getHeightScaleFactor();
-
-        // Find the barcode whose center is closest to the tapped point.
-        Barcode best = null;
-        float bestDistance = Float.MAX_VALUE;
-        for (BarcodeGraphic graphic : mGraphicOverlay.getGraphics()) {
-            Barcode barcode = graphic.getBarcode();
-            if (barcode.getBoundingBox().contains((int) x, (int) y)) {
-                // Exact hit, no need to keep looking.
-                best = barcode;
-                break;
-            }
-            float dx = x - barcode.getBoundingBox().centerX();
-            float dy = y - barcode.getBoundingBox().centerY();
-            float distance = (dx * dx) + (dy * dy);  // actually squared distance
-            if (distance < bestDistance) {
-                best = barcode;
-                bestDistance = distance;
-            }
-        }
-
-        if (best != null) {
-            Intent data = new Intent();
-            data.putExtra(BarcodeObject, best);
-            setResult(CommonStatusCodes.SUCCESS, data);
-            finish();
-            return true;
-        }
-        return false;
-    }
-
-    private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            return onTap(e.getRawX(), e.getRawY()) || super.onSingleTapConfirmed(e);
-        }
-    }
+//    /**
+//     * onTap returns the tapped barcode result to the calling Activity.
+//     *
+//     * @param rawX - the raw position of the tap
+//     * @param rawY - the raw position of the tap.
+//     * @return true if the activity is ending.
+//     */
+//    private boolean onTap(float rawX, float rawY) {
+//        // Find tap point in preview frame coordinates.
+//        int[] location = new int[2];
+//        mGraphicOverlay.getLocationOnScreen(location);
+//        float x = (rawX - location[0]) / mGraphicOverlay.getWidthScaleFactor();
+//        float y = (rawY - location[1]) / mGraphicOverlay.getHeightScaleFactor();
+//
+//        // Find the barcode whose center is closest to the tapped point.
+//        Barcode best = null;
+//        float bestDistance = Float.MAX_VALUE;
+//        for (BarcodeGraphic graphic : mGraphicOverlay.getGraphics()) {
+//            Barcode barcode = graphic.getBarcode();
+//            if (barcode.getBoundingBox().contains((int) x, (int) y)) {
+//                // Exact hit, no need to keep looking.
+//                best = barcode;
+//                break;
+//            }
+//            float dx = x - barcode.getBoundingBox().centerX();
+//            float dy = y - barcode.getBoundingBox().centerY();
+//            float distance = (dx * dx) + (dy * dy);  // actually squared distance
+//            if (distance < bestDistance) {
+//                best = barcode;
+//                bestDistance = distance;
+//            }
+//        }
+//
+//        if (best != null) {
+//            Intent data = new Intent();
+//            data.putExtra(BarcodeObject, best);
+//            setResult(CommonStatusCodes.SUCCESS, data);
+//            finish();
+//            return true;
+//        }
+//        return false;
+//    }
+//
+//    private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
+//        @Override
+//        public boolean onSingleTapConfirmed(MotionEvent e) {
+//            return onTap(e.getRawX(), e.getRawY()) || super.onSingleTapConfirmed(e);
+//        }
+//    }
 
     private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
 

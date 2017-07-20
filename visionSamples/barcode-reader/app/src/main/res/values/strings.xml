@@ -14,4 +14,11 @@
     <string name="barcode_error">"Error reading barcode: %1$s"</string>
     <string name="invalid_json">Invalid QR code scanned (Invalid JSON)</string>
     <string name="add_comment">Add Comment</string>
+    <string name="delete_person">Delete Person</string>
+    <string name="remove_question_1of2">Are you sure you want to remove\u0020</string>
+    <string name="remove_question_2of2">\u0020from the list?</string>
+    <string name="delete_positive">Yes (Delete)</string>
+    <string name="delete_negative">No (Keep)</string>
+    <string name="invalid_meta_json">Invalid Meta JSON</string>
+    <string name="added_to_list_message">\u0020was added to your list</string>
 </resources>

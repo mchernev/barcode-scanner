@@ -1,7 +1,9 @@
 package com.google.android.gms.samples.vision.barcodereader;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -82,7 +84,7 @@ public class ModifyInformation extends AppCompatActivity {
             //TODO: Add Author
         } catch (Exception e) {
             Log.e("TAG", e.toString());
-            Toast.makeText(this, "Invalid Meta JSON", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.invalid_meta_json, Toast.LENGTH_LONG).show();
         }
 
         //TODO: consider saving the current time when updating a person
@@ -96,13 +98,10 @@ public class ModifyInformation extends AppCompatActivity {
             }
         });
 
-        //TODO: consider adding an ARE YOU SURE message before deleting
         deleteBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                        dbManager.delete(id);
-                        Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
-                        startActivity(i);
+                showDialog(id); //confirm deletion
             }
         });
     }
@@ -117,12 +116,13 @@ public class ModifyInformation extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_scan: {
-                Intent i = new Intent(this, MainActivity.class);
+                Intent i = new Intent(this, BarcodeCaptureActivity.class);
                 startActivity(i);
                 break;
             }
             case R.id.action_list: {
-                // do something
+                Intent i = new Intent(this, ListCustomers.class);
+                startActivity(i);
                 break;
             }
             case R.id.action_export: {
@@ -142,6 +142,25 @@ public class ModifyInformation extends AppCompatActivity {
         return "{\"comment\":\"" + comment + "\", \"date\":\"" + time  + "\", \"author\":\"admin\"}";
     }
 
+    private void showDialog(final Long id){
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.delete_person)
+                .setMessage(getString(R.string.remove_question_1of2) + getName() + getString(R.string.remove_question_2of2))
+                .setPositiveButton(R.string.delete_positive, new DialogInterface.OnClickListener() {
+
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        dbManager.delete(id);
+                        Intent i = new Intent(ModifyInformation.this, ListCustomers.class);
+                        startActivity(i);
+                    }})
+                .setNegativeButton(R.string.delete_negative, null).show();
+    }
+
+    private String getName(){
+        TextView nameView = (TextView) findViewById(R.id.displayName);
+        return nameView.getText().toString();
+    }
+
 }
 
-//{"name":"Han Solo", "company":"Rebels", "position":"Pilot", "phone":"555-555-555"}
+//{"name":"Gosho", "company":"Chistota", "position":"Chistach", "phone":"555-555-555"}
