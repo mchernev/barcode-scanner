@@ -94,7 +94,6 @@ public class MainActivity extends Activity {
         //sendFileWithProvider();
 
 
-
 //        File path = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "exp");
 //        if (!path.mkdirs()) {
 //            Log.e("TAG", "Could not make dirs");
@@ -248,6 +247,7 @@ public class MainActivity extends Activity {
 
     public void sendFileWithProvider(){
         File documentsPath = new File(getFilesDir(), "export");
+        documentsPath.mkdirs();
         File file = new File(documentsPath, "myfile");
 
         try {
