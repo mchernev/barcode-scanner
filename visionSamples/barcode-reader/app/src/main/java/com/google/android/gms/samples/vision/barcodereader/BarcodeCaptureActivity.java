@@ -578,11 +578,14 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                 break;
             }
             case R.id.action_export: {
-                // do something
+                Intent i = new Intent(this, ExportToEmail.class);
+                startActivity(i);
                 break;
             }
             case R.id.action_info: {//change to info page. Use as list because of broken screen
-                Intent i = new Intent(this, ListCustomers.class);
+//                Intent i = new Intent(this, ListCustomers.class);
+//                startActivity(i);
+                Intent i = new Intent(this, ExportToEmail.class);
                 startActivity(i);
                 break;
             }

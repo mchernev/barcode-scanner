@@ -99,7 +99,8 @@ public class ListCustomers extends AppCompatActivity {
                 break;
             }
             case R.id.action_export: {
-                // do something
+                Intent i = new Intent(this, ExportToEmail.class);
+                startActivity(i);
                 break;
             }
             case R.id.action_info: {

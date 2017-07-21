@@ -6,6 +6,7 @@
     <uses-feature android:name="android.hardware.camera" />
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -15,7 +16,6 @@
         android:label="MultiTrackerApp"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.NoActionBar">
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -35,13 +35,26 @@
         <activity
             android:name=".BarcodeCaptureActivity"
             android:label="Read Barcode"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".ModifyInformation"
-            android:label="Edit Person"/>
+            android:label="Edit Person" />
         <activity
             android:name=".ListCustomers"
-            android:label="Scanned People"/>
+            android:label="Scanned People" />
+        <activity
+            android:name=".ExportToEmail"
+            android:label="Export CSV file " />
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.google.android.gms.samples.vision.barcodereader.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
     </application>
 
 </manifest>
