@@ -217,14 +217,14 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                 .show();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent e) {
-        boolean b = scaleGestureDetector.onTouchEvent(e);
-
-        boolean c = gestureDetector.onTouchEvent(e);
-
-        return b || c || super.onTouchEvent(e);
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent e) {
+//        boolean b = scaleGestureDetector.onTouchEvent(e);
+//
+//        boolean c = gestureDetector.onTouchEvent(e);
+//
+//        return b || c || super.onTouchEvent(e);
+//    }
 
     private void barcodeListener(){
         h.postDelayed(r, delay);
@@ -312,6 +312,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                 .show();
     }
 
+    //discard deletes an already added person if clicked
     public void discardPerson(){
         //TextView idView = (TextView) findViewById(R.id.idOverlay);
         String id = isInDb(getIdOverlay(), dbManager.fetch());

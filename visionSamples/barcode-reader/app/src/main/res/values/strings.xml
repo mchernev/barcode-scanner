@@ -21,4 +21,6 @@
     <string name="delete_negative">No (Keep)</string>
     <string name="invalid_meta_json">Invalid Meta JSON</string>
     <string name="added_to_list_message">\u0020was added to your list</string>
+    <string name="discard">discard</string>
+    <string name="edit">edit</string>
 </resources>

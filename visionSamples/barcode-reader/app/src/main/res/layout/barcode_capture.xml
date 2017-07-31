@@ -60,16 +60,16 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:backgroundTint="#ff5555"
-        android:text="discard"
+        android:text="@string/discard"
         android:textColor="#FFFFFF"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true" />
     <Button
         android:id="@+id/btnEditOverlay"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:text="edit"
+        android:text="@string/edit"
         android:textColor="#FFFFFF"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
