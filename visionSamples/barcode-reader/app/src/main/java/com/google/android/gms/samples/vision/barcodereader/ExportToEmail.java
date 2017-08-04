@@ -127,6 +127,7 @@ public class ExportToEmail extends AppCompatActivity {
             File file = new File(documentsPath, "testfile.csv");
 
             try {
+                documentsPath.mkdirs();
                 file.createNewFile();
                 FileOutputStream fos = new FileOutputStream(file);
                 fos.write(csv.getBytes());

@@ -24,10 +24,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.hardware.Camera;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.ToneGenerator;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,7 +44,6 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Button;
@@ -50,7 +53,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.CommonStatusCodes;
+import com.google.android.gms.common.api.BooleanResult;
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSource;
 import com.google.android.gms.samples.vision.barcodereader.ui.camera.CameraSourcePreview;
 
@@ -105,6 +108,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private static Runnable r;
 
     private DBManager dbManager;
+
+    private static final String PREFS_NAME = "Config";
+    private SharedPreferences settings;
 
     /**
      * Initializes the UI and creates the detector pipeline.
@@ -177,6 +183,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             }
         };
 
+        settings = getSharedPreferences(PREFS_NAME, 0);
+
 //        barcodeListener();
 
 //        Snackbar.make(mGraphicOverlay, "Tap to capture. Pinch/Stretch to zoom",
@@ -217,30 +225,25 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
                 .show();
     }
 
-//    @Override
-//    public boolean onTouchEvent(MotionEvent e) {
-//        boolean b = scaleGestureDetector.onTouchEvent(e);
-//
-//        boolean c = gestureDetector.onTouchEvent(e);
-//
-//        return b || c || super.onTouchEvent(e);
-//    }
-
     private void barcodeListener(){
         h.postDelayed(r, delay);
     }
 
     public void foundBarcode(Barcode bc) {
-//        Intent data = new Intent();
-//        data.putExtra(BarcodeObject, bc);
-//        setResult(CommonStatusCodes.SUCCESS, data);
-//        finish();
-//        if(currentBarcode == null || !bc.displayValue.equals(currentBarcode.displayValue)){
-//            currentBarcode = bc;
-//            displayOnOverlay(bc);
-//        }
         h.removeCallbacks(r);
-        displayOnOverlay(bc);
+
+        switch (settings.getString("mode", "default")) {
+            case "company":
+                companyModeOverlay(bc);
+                break;
+            case "hall":
+                hallModeOverlay(bc);
+                break;
+            default:
+                Log.e("Mode Error", "Unknown mode");
+                break;
+        }
+//        companyModeOverlay(bc);
     }
 
     private MapWrapper extractJsonToMap(Barcode bc){
@@ -254,11 +257,12 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         }
         catch (Exception e){
             Log.e("JSON Parse Error", e.toString());
-            return new MapWrapper();
+            return null;
         }
     }
 
-    private void displayOnOverlay(Barcode bc){
+    //Displays overlay when qr code is scanned and adds person to db
+    private void companyModeOverlay(Barcode bc){
         MapWrapper mw = extractJsonToMap(bc);
 
         String name = null;
@@ -273,9 +277,9 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         RelativeLayout rl = (RelativeLayout) findViewById(R.id.infoOverlay);
 
         try {
-            name = mw.getName();
-            company = mw.getCompany();
-            id = mw.getId();
+            name = mw.get("name");
+            company = mw.get("company");
+            id = mw.get("id");
             nameView.setText(name);
             companyView.setText(company);
             idView.setText(id);
@@ -283,20 +287,17 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             companyView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             discardView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
             editView.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
-            if(!isInDb(mw.getId(), dbManager.fetch()).equals("")){
+            if(!getIdFromDb(mw.get("id"), dbManager.fetch()).equals("")){//person already in db
                 rl.setBackgroundColor(Color.parseColor("#ff1111"));
-                //Log.d("COLOR", "Color changed to red");
             }
             else{
                 rl.setBackgroundColor(Color.parseColor("#666666"));
-                //Log.d("COLOR", "Color changed to grey");
                 addPerson(bc);
             }
             barcodeListener();
         }
         catch(Exception e){
             Log.e("Barcode Scan", e.toString());
-            //Toast.makeText(this, R.string.invalid_json, Toast.LENGTH_SHORT).show();
             Snackbar.make(mGraphicOverlay, R.string.invalid_json,
                 Snackbar.LENGTH_LONG)
                 .show();
@@ -305,17 +306,17 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 
     private void addPerson(Barcode bc){
         currentTime = getTime();
-        dbManager.insert(bc.displayValue, getMetaJSON("", currentTime));
-//        Toast.makeText(this, getNameOverlay() + " added", Toast.LENGTH_LONG).show();
+        dbManager.insert(bc.displayValue, getMetaJSON("", currentTime, settings.getString("name", "Unknown")));
         Snackbar.make(mGraphicOverlay, getNameOverlay() + getString(R.string.added_to_list_message),
                 Snackbar.LENGTH_LONG)
                 .show();
     }
 
     //discard deletes an already added person if clicked
+    //maybe check if duplicate before deleting
     public void discardPerson(){
         //TextView idView = (TextView) findViewById(R.id.idOverlay);
-        String id = isInDb(getIdOverlay(), dbManager.fetch());
+        String id = getIdFromDb(getIdOverlay(), dbManager.fetch());
         dbManager.delete(Long.parseLong(id));
 
         hideInfoOverlay();
@@ -325,8 +326,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         //Edit button sends to ModifyActivity
         Intent i = new Intent(BarcodeCaptureActivity.this, ModifyInformation.class);
         i.putExtra("QRCode", currentBarcode.displayValue);
-        i.putExtra("Meta", getMetaJSON("", currentTime));
-        String id = isInDb(getIdOverlay(), dbManager.fetch());
+        i.putExtra("Meta", getMetaJSON("", currentTime, settings.getString("name", "Unknown")));
+        String id = getIdFromDb(getIdOverlay(), dbManager.fetch());
         i.putExtra("id", id);
         startActivity(i);
     }
@@ -347,7 +348,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         companyView.setHeight(0);
     }
 
-    private String isInDb(String id, Cursor cursor){//cursor = dbManager.fetch()
+    //returns the DB ID of the scanned person
+    private String getIdFromDb(String id, Cursor cursor){//cursor = dbManager.fetch()
         if(cursor.getCount()!=0){
             if(cursor.moveToFirst()){
                 String match;
@@ -364,8 +366,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         return "";
     }
 
-    private String getMetaJSON(String comment, String time){
-        return "{\"comment\":\"" + comment + "\", \"date\":\"" + time + "\", \"author\":\"admin\"}";
+    private String getMetaJSON(String comment, String time, String author){
+        return "{\"comment\":\"" + comment + "\", \"date\":\"" + time + "\", \"author\":\"" + author + "\"}";
     }
 
     private String getTime(){
@@ -383,6 +385,44 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private String getIdOverlay(){
         TextView idView = (TextView) findViewById(R.id.idOverlay);
         return idView.getText().toString();
+    }
+
+    private void hallModeOverlay(Barcode bc){
+        Intent intent = getIntent();
+        String hall = intent.getStringExtra("hall");
+        Boolean tag = true;
+        final RelativeLayout rl = (RelativeLayout) findViewById(R.id.infoOverlay);
+//        ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+        //Code checking tags
+
+        rl.getLayoutParams().height = RelativeLayout.LayoutParams.MATCH_PARENT;
+        rl.requestLayout();
+        if(tag){//tags match
+            rl.setBackgroundColor(Color.parseColor("#76ee00"));
+//            MediaPlayer mPlayer = MediaPlayer.create(this, R.raw.accept);
+//            mPlayer.start();
+//            toneG.startTone(ToneGenerator.TONE_CDMA_ABBR_ALERT, 200);//accept
+            addPerson(bc);
+        }
+        else{
+            rl.setBackgroundColor(Color.parseColor("#ff1111"));
+//            MediaPlayer mPlayer = MediaPlayer.create(this, R.raw.fail);
+//            mPlayer.start();
+//            toneG.startTone(ToneGenerator.TONE_SUP_RADIO_NOTAVAIL, 600);//reject
+//            toneG.startTone(ToneGenerator.TONE_PROP_BEEP2, 600);//reject
+        }
+        //turn off the color overlay after 2.5 seconds
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                rl.getLayoutParams().height = RelativeLayout.LayoutParams.WRAP_CONTENT;
+                rl.requestLayout();
+            }
+        }, 2500);
+
+        //TODO: Check person tags against hall tags and react.
+        //TODO: Get hall tags from file. Get person tags from Barcode parameter.
     }
 
     /**
@@ -619,56 +659,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
             }
         }
     }
-
-//    /**
-//     * onTap returns the tapped barcode result to the calling Activity.
-//     *
-//     * @param rawX - the raw position of the tap
-//     * @param rawY - the raw position of the tap.
-//     * @return true if the activity is ending.
-//     */
-//    private boolean onTap(float rawX, float rawY) {
-//        // Find tap point in preview frame coordinates.
-//        int[] location = new int[2];
-//        mGraphicOverlay.getLocationOnScreen(location);
-//        float x = (rawX - location[0]) / mGraphicOverlay.getWidthScaleFactor();
-//        float y = (rawY - location[1]) / mGraphicOverlay.getHeightScaleFactor();
-//
-//        // Find the barcode whose center is closest to the tapped point.
-//        Barcode best = null;
-//        float bestDistance = Float.MAX_VALUE;
-//        for (BarcodeGraphic graphic : mGraphicOverlay.getGraphics()) {
-//            Barcode barcode = graphic.getBarcode();
-//            if (barcode.getBoundingBox().contains((int) x, (int) y)) {
-//                // Exact hit, no need to keep looking.
-//                best = barcode;
-//                break;
-//            }
-//            float dx = x - barcode.getBoundingBox().centerX();
-//            float dy = y - barcode.getBoundingBox().centerY();
-//            float distance = (dx * dx) + (dy * dy);  // actually squared distance
-//            if (distance < bestDistance) {
-//                best = barcode;
-//                bestDistance = distance;
-//            }
-//        }
-//
-//        if (best != null) {
-//            Intent data = new Intent();
-//            data.putExtra(BarcodeObject, best);
-//            setResult(CommonStatusCodes.SUCCESS, data);
-//            finish();
-//            return true;
-//        }
-//        return false;
-//    }
-//
-//    private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
-//        @Override
-//        public boolean onSingleTapConfirmed(MotionEvent e) {
-//            return onTap(e.getRawX(), e.getRawY()) || super.onSingleTapConfirmed(e);
-//        }
-//    }
 
     private class ScaleListener implements ScaleGestureDetector.OnScaleGestureListener {
 

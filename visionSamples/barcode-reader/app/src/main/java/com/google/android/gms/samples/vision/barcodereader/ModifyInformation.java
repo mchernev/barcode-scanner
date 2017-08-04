@@ -15,6 +15,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.vision.text.Text;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -47,6 +48,7 @@ public class ModifyInformation extends AppCompatActivity {
         final EditText inputComment = (EditText) findViewById(R.id.inputComment);
         final TextView displayComment = (TextView) findViewById(R.id.displayComment);
         final TextView displayTime = (TextView) findViewById(R.id.displayTime);
+        final TextView displayAuthor = (TextView) findViewById(R.id.displayAuthor);
         final Button deleteBtn = (Button) findViewById(R.id.delete);
         final Button updateBtn = (Button) findViewById(R.id.update);
 
@@ -65,10 +67,10 @@ public class ModifyInformation extends AppCompatActivity {
         try {
             Map<String, Object> myMap = gson.fromJson(json, type);
             MapWrapper mw = new MapWrapper(myMap);
-            displayName.setText(mw.getName());
-            displayCompany.setText(mw.getCompany());
-            displayPosition.setText(mw.getPosition());
-            displayPhone.setText(mw.getPhone());
+            displayName.setText(mw.get("name"));
+            displayCompany.setText(mw.get("company"));
+            displayPosition.setText(mw.get("position"));
+            displayPhone.setText(mw.get("phone"));
             //displayName.setText(((ArrayList)myMap.get("array")).get(2).toString());
         }
         catch (Exception e){
@@ -81,7 +83,7 @@ public class ModifyInformation extends AppCompatActivity {
             displayComment.setText(myMap.get("comment").toString());
             inputComment.setText(myMap.get("comment").toString());
             displayTime.setText(myMap.get("date").toString());
-            //TODO: Add Author
+            displayAuthor.setText("Author: " + myMap.get("author").toString());
         } catch (Exception e) {
             Log.e("TAG", e.toString());
             Toast.makeText(this, R.string.invalid_meta_json, Toast.LENGTH_LONG).show();

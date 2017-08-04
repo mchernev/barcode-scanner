@@ -17,8 +17,8 @@
 package com.google.android.gms.samples.vision.barcodereader;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.app.Activity;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -26,10 +26,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.TextView;
-
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.vision.barcode.Barcode;
+import android.widget.Toast;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
@@ -42,10 +41,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CompoundButton useFlash;
     private TextView statusMessage;
     private TextView barcodeValue;
+    private EditText setAuthor;
 
     private static final int RC_BARCODE_CAPTURE = 9001;
     private static final int MODIFY_INFO = 9002;
     private static final String TAG = "BarcodeMain";
+    private static final String PREFS_NAME = "Config";
+
+    private SharedPreferences settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,22 +67,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         statusMessage = (TextView)findViewById(R.id.status_message);
         barcodeValue = (TextView)findViewById(R.id.barcode_value);
+        setAuthor = (EditText) findViewById(R.id.set_author);
 
-        autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
-        useFlash = (CompoundButton) findViewById(R.id.use_flash);
+//        autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
+//        useFlash = (CompoundButton) findViewById(R.id.use_flash);
 
-        useFlash.setChecked(false);
-        autoFocus.setChecked(true);
-        autoFocus.setVisibility(View.INVISIBLE);
-        useFlash.setVisibility(View.INVISIBLE);
+    //        useFlash.setChecked(false);
+    //        autoFocus.setChecked(true);
+//        autoFocus.setVisibility(View.INVISIBLE);
+//        useFlash.setVisibility(View.INVISIBLE);
 
-        Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-        startActivity(intent);
+//        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        settings = getSharedPreferences(PREFS_NAME, 0);
+        boolean isFirstUsage = settings.getBoolean("first_usage", true);
+
+        new DownloadJSON().execute();//asynctask test
+
+        if (isFirstUsage) {
+            //initial config
+//            SharedPreferences.Editor editor = settings.edit();
+//            editor.putBoolean("first_usage", false);
+//            editor.apply();
+        }
+        else {
+            Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+            startActivity(intent);
+        }
+
+//        Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+//        startActivity(intent);
         //intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
         //intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
         //startActivityForResult(intent, RC_BARCODE_CAPTURE);
 
-        findViewById(R.id.read_barcode).setOnClickListener(this);
+//        findViewById(R.id.read_barcode).setOnClickListener(this);
+        findViewById(R.id.hall_mode).setOnClickListener(this);
+        findViewById(R.id.company_mode).setOnClickListener(this);
+
+//        ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_ALARM, 100);
+//        toneG.startTone(ToneGenerator.TONE_CDMA_ABBR_ALERT, 200);//accept
+//        toneG.startTone(ToneGenerator.TONE_SUP_RADIO_NOTAVAIL, 600);//reject
+
+
     }
 
     /**
@@ -89,80 +118,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.read_barcode) {
-            // launch barcode activity.
-            Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-            intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
-            intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
+//        if (v.getId() == R.id.read_barcode) {
+//            // launch barcode activity.
+//            Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+//            intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
+//            intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
+//
+//            startActivityForResult(intent, RC_BARCODE_CAPTURE);
+//        }
+        if (v.getId() == R.id.hall_mode) {
+            if (setAuthor.getText().length() >= 3) {
+                findViewById(R.id.name_error).setVisibility(View.GONE);
 
-            startActivityForResult(intent, RC_BARCODE_CAPTURE);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("mode", "hall");
+                editor.putString("name", setAuthor.getText().toString());
+                editor.apply();
+
+                Intent intent = new Intent(this, SelectHall.class);
+                startActivity(intent);
+            }
+            else {
+                findViewById(R.id.name_error).setVisibility(View.VISIBLE);
+            }
         }
+        else if (v.getId() == R.id.company_mode) {
+            if (setAuthor.getText().length() >= 3) {
+                findViewById(R.id.name_error).setVisibility(View.GONE);
 
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("mode", "company");
+                editor.putString("name", setAuthor.getText().toString());
+                editor.apply();
+
+                Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+                startActivity(intent);
+
+                Toast.makeText(this, "Hello " + setAuthor.getText().toString(), Toast.LENGTH_SHORT).show();
+            }
+            else {
+                findViewById(R.id.name_error).setVisibility(View.VISIBLE);
+            }
+        }
     }
-
-//    /**
-//     * Called when an activity you launched exits, giving you the requestCode
-//     * you started it with, the resultCode it returned, and any additional
-//     * data from it.  The <var>resultCode</var> will be
-//     * {@link #RESULT_CANCELED} if the activity explicitly returned that,
-//     * didn't return any result, or crashed during its operation.
-//     * <p/>
-//     * <p>You will receive this call immediately before onResume() when your
-//     * activity is re-starting.
-//     * <p/>
-//     *
-//     * @param requestCode The integer request code originally supplied to
-//     *                    startActivityForResult(), allowing you to identify who this
-//     *                    result came from.
-//     * @param resultCode  The integer result code returned by the child activity
-//     *                    through its setResult().
-//     * @param data        An Intent, which can return result data to the caller
-//     *                    (various data can be attached to Intent "extras").
-//     * @see #startActivityForResult
-//     * @see #createPendingResult
-//     * @see #setResult(int)
-//     */
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        BarcodeCaptureActivity.mGraphic = null;
-//        if (requestCode == RC_BARCODE_CAPTURE) {
-//            if (resultCode == CommonStatusCodes.SUCCESS) {
-//                if (data != null) {
-//                    Barcode barcode = data.getParcelableExtra(BarcodeCaptureActivity.BarcodeObject);
-//                    statusMessage.setText(R.string.barcode_success);
-//                    //barcodeValue.setText(barcode.displayValue);
-//                    Log.d(TAG, "Barcode read: " + barcode.displayValue);
-//                    //TextView result = (TextView) findViewById(R.id.bar_res);
-//                    //result.setText(barcode.displayValue);
-//                    //Intent i = new Intent(MainActivity.this, ModifyInformation.class);
-//                    //i.putExtra("QRCode", barcode.displayValue);
-//                    //startActivityForResult(i, MODIFY_INFO);
-//                    autoFocus.setVisibility(View.INVISIBLE);
-//                    useFlash.setVisibility(View.INVISIBLE);
-//                } else {
-//                    statusMessage.setText(R.string.barcode_failure);
-//                    Log.d(TAG, "No barcode captured, intent data is null");
-//                }
-//            } else {
-//                statusMessage.setText(String.format(getString(R.string.barcode_error),
-//                        CommonStatusCodes.getStatusCodeString(resultCode)));
-//            }
-//        }
-//
-////        if(requestCode == MODIFY_INFO){
-////            if(resultCode == CommonStatusCodes.ERROR){
-////                if(data != null){
-////                    String message = getResources().getString(R.string.invalid_json) + "\n\n" + data.getStringExtra("Display Exception");
-////                    statusMessage.setText(message);
-////                    Log.d(TAG, "Error after barcode was read: " + data.getStringExtra("Display Exception"));
-////                }
-////            }
-////        }
-//
-//        else {
-//            super.onActivityResult(requestCode, resultCode, data);
-//        }
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -174,14 +172,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_scan: {
-                Intent intent = new Intent(this, BarcodeCaptureActivity.class);
-                intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
-                intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
-                startActivityForResult(intent, RC_BARCODE_CAPTURE);
+                String s = settings.getString("mode", "");
+                if(!s.equals("")) {
+                    Intent intent = new Intent(this, BarcodeCaptureActivity.class);
+                    startActivity(intent);
+                }
+                else{
+                    Toast.makeText(this, "You have to pick a mode first", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "No Mode Picked");
+                }
                 break;
             }
             case R.id.action_list: {
-                // do something
+                Intent i = new Intent(this, ListCustomers.class);
+                startActivity(i);
                 break;
             }
             case R.id.action_export: {
