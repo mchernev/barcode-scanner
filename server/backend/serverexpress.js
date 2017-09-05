@@ -10,6 +10,16 @@ app.get('/', function (req, res) {
   res.send('Hello World!')
 })
 
+// app.use(express.logger());
+// app.use(function(req, res, next) {
+//     //allows localhost:3000 to communicate with this server
+//     // res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+//     res.header("Access-Control-Allow-Origin", "https://774b09a6.ngrok.io");
+//     res.header("Access-Control-Allow-Credentials", "true");
+//     res.header("Access-Control-Allow-Headers", "Origin,Content-Type, Authorization");
+//     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+//     next();
+// });
 // app.get('/ass', function (req, res) {
 //   res.send('Hello Ass!')
 // })
@@ -27,9 +37,7 @@ app.get('/', function (req, res) {
 //   res.send('Hello')
 // })
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-});
+
 
 // var msg = "default";
 // redis.exists('string key', function(err, reply) {
@@ -99,6 +107,10 @@ var json =
 json = JSON.parse(JSON.stringify(json));
 // model.transferCoins(json)
 
+
+app.listen(3001, function () {
+  console.log('Example app listening on port 3001!')
+});
 
 // redis.set('100', '{"barcoins":100}', function (err, reply) {
 //     console.log(reply);
